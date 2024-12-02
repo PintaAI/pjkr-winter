@@ -13,3 +13,12 @@ export function formatRupiah(amount: number): string {
     maximumFractionDigits: 0
   }).format(amount)
 }
+
+export function formatWon(amount: number): string {
+  return new Intl.NumberFormat('ko-KR', {
+    style: 'currency',
+    currency: 'KRW',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount)
+}

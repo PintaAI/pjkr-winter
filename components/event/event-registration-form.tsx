@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { TicketType, RentalType, BusType } from '@prisma/client'
-import { registerEvent, getBusCapacity } from '@/app/actions/event-registration'
+import { registerEvent, getBusCapacity, getTicketPrices, getRentalPrices } from '@/app/actions/event-registration'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { formatWon } from '@/lib/utils'
 
 interface FormData {
   name: string
@@ -42,6 +43,28 @@ interface BusCapacity {
   BUS_1: number;
   BUS_2: number;
   BUS_3: number;
+  details: {
+    [key in BusType]: {
+      namaBus: string;
+      harga: number;
+      kapasitas: number;
+    }
+  }
+}
+
+interface TicketPrices {
+  REGULAR: number;
+  LIFT_GONDOLA: number;
+}
+
+interface RentalInfo {
+  price: number;
+  name: string;
+}
+
+interface RentalPrices {
+  EQUIPMENT_FULLSET: RentalInfo;
+  CLOTHING_FULLSET: RentalInfo;
 }
 
 export default function EventRegistrationForm() {
@@ -51,18 +74,44 @@ export default function EventRegistrationForm() {
   const [busCapacity, setBusCapacity] = useState<BusCapacity>({
     BUS_1: 0,
     BUS_2: 0,
-    BUS_3: 0
+    BUS_3: 0,
+    details: {
+      BUS_1: { namaBus: '', harga: 0, kapasitas: 40 },
+      BUS_2: { namaBus: '', harga: 0, kapasitas: 40 },
+      BUS_3: { namaBus: '', harga: 0, kapasitas: 40 }
+    }
+  })
+  const [ticketPrices, setTicketPrices] = useState<TicketPrices>({
+    REGULAR: 0,
+    LIFT_GONDOLA: 0
+  })
+  const [rentalPrices, setRentalPrices] = useState<RentalPrices>({
+    EQUIPMENT_FULLSET: { price: 0, name: '' },
+    CLOTHING_FULLSET: { price: 0, name: '' }
   })
   const router = useRouter()
 
   useEffect(() => {
-    const loadBusCapacity = async () => {
-      const result = await getBusCapacity()
-      if (result.success) {
-        setBusCapacity(result.data)
+    const loadData = async () => {
+      // Load bus capacity
+      const busResult = await getBusCapacity()
+      if (busResult.success) {
+        setBusCapacity(busResult.data)
+      }
+
+      // Load ticket prices
+      const ticketResult = await getTicketPrices()
+      if (ticketResult.success) {
+        setTicketPrices(ticketResult.data)
+      }
+
+      // Load rental prices
+      const rentalResult = await getRentalPrices()
+      if (rentalResult.success) {
+        setRentalPrices(rentalResult.data)
       }
     }
-    loadBusCapacity()
+    loadData()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,7 +215,9 @@ export default function EventRegistrationForm() {
               <CardTitle>Regular</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-blue-600">Rp 100.000</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatWon(ticketPrices.REGULAR)}
+              </p>
               <ul className="mt-4 space-y-2">
                 <li>✓ Akses area ski pemula</li>
                 <li>✓ Instruktur dasar</li>
@@ -187,7 +238,9 @@ export default function EventRegistrationForm() {
               <CardTitle>Lift Gondola</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-blue-600">Rp 150.000</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatWon(ticketPrices.LIFT_GONDOLA)}
+              </p>
               <ul className="mt-4 space-y-2">
                 <li>✓ Akses Lift Gondola</li>
                 <li>✓ Area ski lanjutan</li>
@@ -203,7 +256,8 @@ export default function EventRegistrationForm() {
         <h2 className="text-xl font-semibold">Pilihan Bus</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {(['BUS_1', 'BUS_2', 'BUS_3'] as BusType[]).map((bus) => {
-            const isFull = (busCapacity[bus] || 0) >= 40
+            const busDetail = busCapacity.details[bus]
+            const isFull = (busCapacity[bus] || 0) >= busDetail.kapasitas
             const isSelected = formData.busType === bus
 
             return (
@@ -224,18 +278,16 @@ export default function EventRegistrationForm() {
               >
                 <CardHeader>
                   <CardTitle>
-                    Bus {bus.split('_')[1]}
+                    {busDetail.namaBus}
                     {isFull && <span className="text-red-500 text-sm"> (Penuh)</span>}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Kapasitas: {busCapacity[bus]}/40
+                  <p className="text-2xl font-bold text-blue-600">
+                    {formatWon(busDetail.harga)}
                   </p>
-                  <p className="mt-2 font-medium">
-                    {bus === 'BUS_1' && 'Ekonomi'}
-                    {bus === 'BUS_2' && 'Bisnis'}
-                    {bus === 'BUS_3' && 'Eksekutif'}
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Kapasitas: {busCapacity[bus]}/{busDetail.kapasitas}
                   </p>
                 </CardContent>
               </Card>
@@ -276,10 +328,10 @@ export default function EventRegistrationForm() {
             />
             <div className="grid gap-1.5 leading-none">
               <Label htmlFor="equipment-fullset">
-                Sewa Peralatan Fullset
+                {rentalPrices.EQUIPMENT_FULLSET.name}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Termasuk ski/snowboard, helm, dan perlengkapan keselamatan (Rp 100.000)
+                Termasuk ski/snowboard, helm, dan perlengkapan keselamatan ({formatWon(rentalPrices.EQUIPMENT_FULLSET.price)})
               </p>
             </div>
           </div>
@@ -310,10 +362,10 @@ export default function EventRegistrationForm() {
             />
             <div className="grid gap-1.5 leading-none">
               <Label htmlFor="clothing-fullset">
-                Sewa Pakaian Fullset
+                {rentalPrices.CLOTHING_FULLSET.name}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Termasuk jaket winter, celana, sarung tangan, dan kacamata (Rp 50.000)
+                Termasuk jaket winter, celana, sarung tangan, dan kacamata ({formatWon(rentalPrices.CLOTHING_FULLSET.price)})
               </p>
             </div>
           </div>
