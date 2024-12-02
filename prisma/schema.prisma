@@ -20,6 +20,25 @@ enum UserPlan {
   PRO
 }
 
+// Enum untuk jenis tiket
+enum TicketType {
+  REGULAR
+  LIFT_GONDOLA
+}
+
+// Enum untuk tipe bus
+enum BusType {
+  BUS_1
+  BUS_2
+  BUS_3
+}
+
+// Enum untuk jenis sewa
+enum RentalType {
+  EQUIPMENT_FULLSET
+  CLOTHING_FULLSET
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -31,9 +50,19 @@ model User {
   plan          UserPlan  @default(FREE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  alamat        String?
+  telepon       String?
+  isPanitia     Boolean   @default(false)
 
+  // Relasi yang sudah ada
   accounts Account[]
   sessions Session[]
+
+  // Relasi baru
+  tiket   Ticket[]
+  sewaan  Rental[]
+  bus     Bus?     @relation(fields: [busId], references: [id])
+  busId   String?
 }
 
 model Account {
@@ -70,4 +99,39 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Model Tiket
+model Ticket {
+  id        String     @id @default(cuid())
+  tipe      TicketType @default(REGULAR)
+  harga     Float
+  
+  // Relasi dengan peserta
+  peserta   User       @relation(fields: [pesertaId], references: [id])
+  pesertaId String
+}
+
+// Model Sewa
+model Rental {
+  id          String     @id @default(cuid())
+  tipe        RentalType
+  namaBarang  String     // Menambahkan field namaBarang
+  hargaSewa   Float
+  
+  // Relasi dengan peserta
+  peserta     User       @relation(fields: [pesertaId], references: [id])
+  pesertaId   String
+}
+
+// Model Bus
+model Bus {
+  id        String  @id @default(cuid())
+  namaBus   String
+  tipe      BusType @unique
+  harga     Float
+  kapasitas Int     @default(40)
+  
+  // Relasi dengan peserta
+  peserta   User[]
 }

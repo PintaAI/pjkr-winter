@@ -6,7 +6,8 @@ export const publicRoutes = [
   "/",
   "/community",
   "/artikel",
-  "/artikel/[id]"
+  "/artikel/[id]",
+  "/event-registration"
 ];
 
 /**
@@ -30,4 +31,4 @@ export const apiAuthPrefix = "/api"; // Izinkan semua rute API
 * URL pengalihan default ketika pengguna berhasil masuk log.
 * @type {string}
 */
-export const DEFAULT_REDIRECT_URL = "/";
+export const DEFAULT_REDIRECT_URL = "/dashboard";

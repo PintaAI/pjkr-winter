@@ -1,68 +1,90 @@
-"use client"
-
-import Image from "next/image"
 import Link from "next/link"
-import { useSession } from "next-auth/react"
-import { LogoutButton } from "@/components/auth/logout-button"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { CalendarDays, MapPin } from "lucide-react"
 
 export const HomeContent = () => {
-  const { data: session } = useSession()
-
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
-      <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full">
-        <div className="flex flex-col items-center mb-8">
-          <Image
-            className="dark:invert mb-6"
-            src="/next.svg"
-            alt="Next.js logo"
-            width={180}
-            height={38}
-            priority
-          />
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            Selamat Datang
-          </h1>
-          <p className="text-gray-600 text-center">
-            {session ? "Anda sudah login" : "Silakan pilih opsi di bawah ini"}
-          </p>
-        </div>
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Hero Section */}
+      <div className="text-center space-y-4 max-w-2xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold">
+          PJKR Winter Event 2024
+        </h1>
+        <p className="text-muted-foreground">
+          Bergabunglah dalam petualangan musim dingin yang tak terlupakan
+        </p>
+      </div>
 
-        <div className="space-y-4">
-          {session ? (
-            <div className="flex items-center justify-center">
-              <LogoutButton />
+      {/* Info Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <Card>
+          <CardContent className="flex items-center gap-4 p-4">
+            <CalendarDays className="w-8 h-8 text-blue-600 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold">Tanggal Event</h3>
+              <p className="text-sm text-muted-foreground">20-22 Januari 2024</p>
             </div>
-          ) : (
-            <>
-              <Link 
-                href="/auth/login"
-                className="flex items-center justify-center w-full bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Login
-              </Link>
-              
-              <Link 
-                href="/auth/register"
-                className="flex items-center justify-center w-full bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Register
-              </Link>
-            </>
-          )}
-          
-          <Link 
-            href="/dashboard"
-            className="flex items-center justify-center w-full bg-purple-500 text-white px-4 py-3 rounded-lg hover:bg-purple-600 transition-colors"
-          >
-            Dashboard
-          </Link>
-        </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-4">
+            <MapPin className="w-8 h-8 text-blue-600 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold">Lokasi</h3>
+              <p className="text-sm text-muted-foreground">Resort Ski Genting Highland</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500 text-center">
-            Dibuat dengan Next.js dan NextAuth
-          </p>
+      {/* Packages */}
+      <div className="max-w-2xl mx-auto space-y-4">
+        <h2 className="text-2xl font-semibold text-center">Pilihan Paket</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold">Paket Regular</h3>
+                <p className="text-blue-600 font-bold">Rp 100.000</p>
+              </div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>✓ Akses area ski pemula</li>
+                <li>✓ Instruktur dasar</li>
+                <li>✓ Peralatan standar</li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold">Paket Lift Gondola</h3>
+                <p className="text-blue-600 font-bold">Rp 150.000</p>
+              </div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>✓ Akses Lift Gondola</li>
+                <li>✓ Area ski lanjutan</li>
+                <li>✓ Instruktur profesional</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="text-center space-y-6">
+        <Button size="lg" asChild>
+          <Link href="/event-registration">
+            Daftar Sekarang
+          </Link>
+        </Button>
+        
+        <div className="pt-8">
+          <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
+            <Link href="/auth/login">
+              Login Panitia →
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

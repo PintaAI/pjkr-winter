@@ -1,8 +1,7 @@
 import { db } from "@/lib/db"
-import { RegisterSchema } from "@/schemas"
-import { UserRole, UserPlan } from "@prisma/client"
+import { hash } from "bcryptjs"
 import { NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
+import { RegisterSchema } from "@/schemas"
 
 export async function POST(req: Request) {
   try {
@@ -10,16 +9,16 @@ export async function POST(req: Request) {
     const validatedFields = RegisterSchema.safeParse(body)
 
     if (!validatedFields.success) {
-      return NextResponse.json(
-        { error: "Data tidak valid" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Data tidak valid" }, { status: 400 })
     }
 
-    const { email, password, name } = validatedFields.data
-    
+    const { email, password, name, isPanitia } = body
+
+    // Check if email already exists
     const existingUser = await db.user.findUnique({
-      where: { email }
+      where: {
+        email
+      }
     })
 
     if (existingUser) {
@@ -29,26 +28,26 @@ export async function POST(req: Request) {
       )
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedPassword = await hash(password, 10)
 
     await db.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: UserRole.USER,
-        plan: UserPlan.FREE
+        isPanitia: isPanitia || false, // Default false jika tidak diset
+        role: isPanitia ? "ADMIN" : "USER" // Set role berdasarkan isPanitia
       }
     })
 
     return NextResponse.json(
-      { success: "User berhasil didaftarkan" },
+      { success: "Akun berhasil dibuat" },
       { status: 201 }
     )
   } catch (error) {
-    console.error(error)
+    console.error("ERROR REGISTER:", error)
     return NextResponse.json(
-      { error: "Terjadi kesalahan internal" },
+      { error: "Terjadi kesalahan saat membuat akun" },
       { status: 500 }
     )
   }

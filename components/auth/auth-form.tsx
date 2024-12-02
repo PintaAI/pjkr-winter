@@ -4,29 +4,37 @@ import { LoginSchema, RegisterSchema } from "@/schemas"
 import { DEFAULT_REDIRECT_URL } from "@/routes"
 import { useState } from "react"
 import { signIn } from "next-auth/react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-interface AuthFormProps {
-  mode: "login" | "register"
-}
-
-export const AuthForm = ({ mode }: AuthFormProps) => {
+export const AuthForm = () => {
   const [error, setError] = useState<string | undefined>()
   const [success, setSuccess] = useState<string | undefined>()
   const [isPending, setIsPending] = useState(false)
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: any, mode: "login" | "register") => {
     setError(undefined)
     setSuccess(undefined)
     setIsPending(true)
 
     try {
       if (mode === "register") {
+        // Tambahkan isPanitia ke values
+        const registerData = {
+          ...values,
+          isPanitia: true // Set otomatis sebagai panitia
+        }
+
         const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(values)
+          body: JSON.stringify(registerData)
         })
 
         const data = await response.json()
@@ -71,71 +79,128 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   }
 
   return (
-    <div className="grid gap-6">
-      <form onSubmit={(e) => {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget)
-        const values = Object.fromEntries(formData)
-        onSubmit(values)
-      }}>
-        <div className="grid gap-4">
-          {mode === "register" && (
-            <div className="grid gap-2">
-              <label htmlFor="name">Nama</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                className="w-full p-2 border rounded"
+    <Tabs defaultValue="login" className="w-full max-w-md mx-auto">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="login">Login</TabsTrigger>
+        <TabsTrigger value="register">Register</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="login">
+        <Card>
+          <CardHeader>
+            <CardTitle>Login Panitia</CardTitle>
+            <CardDescription>
+              Masuk ke dashboard panitia PJKR Winter Event
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.currentTarget)
+              const values = Object.fromEntries(formData)
+              onSubmit(values, "login")
+            }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-login">Email</Label>
+                <Input
+                  id="email-login"
+                  name="email"
+                  type="email"
+                  placeholder="nama@example.com"
+                  disabled={isPending}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password-login">Password</Label>
+                <Input
+                  id="password-login"
+                  name="password"
+                  type="password"
+                  disabled={isPending}
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full"
                 disabled={isPending}
-                required
-              />
-            </div>
-          )}
-          <div className="grid gap-2">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="nama@example.com"
-              className="w-full p-2 border rounded"
-              disabled={isPending}
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              className="w-full p-2 border rounded"
-              disabled={isPending}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className={`w-full p-2 rounded text-white ${
-              isPending ? "bg-gray-500" : "bg-blue-500 hover:bg-blue-600"
-            }`}
-            disabled={isPending}
-          >
-            {isPending ? "Memproses..." : mode === "login" ? "Login" : "Register"}
-          </button>
-        </div>
-      </form>
+              >
+                {isPending ? "Memproses..." : "Login"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="register">
+        <Card>
+          <CardHeader>
+            <CardTitle>Register Panitia</CardTitle>
+            <CardDescription>
+              Daftar sebagai panitia PJKR Winter Event
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.currentTarget)
+              const values = Object.fromEntries(formData)
+              onSubmit(values, "register")
+            }} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nama</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  disabled={isPending}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email-register">Email</Label>
+                <Input
+                  id="email-register"
+                  name="email"
+                  type="email"
+                  placeholder="nama@example.com"
+                  disabled={isPending}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password-register">Password</Label>
+                <Input
+                  id="password-register"
+                  name="password"
+                  type="password"
+                  disabled={isPending}
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isPending}
+              >
+                {isPending ? "Memproses..." : "Register"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-          {success}
-        </div>
+        <Alert className="mt-4">
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
       )}
-    </div>
+    </Tabs>
   )
 }
