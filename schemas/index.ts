@@ -18,6 +18,5 @@ export const RegisterSchema = z.object({
   }),
   name: z.string().min(1, {
     message: "Nama harus diisi"
-  }),
-  isPanitia: z.boolean().optional().default(false)
+  })
 })

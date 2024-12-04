@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Data tidak valid" }, { status: 400 })
     }
 
-    const { email, password, name, isPanitia } = body
+    const { email, password, name } = validatedFields.data
 
     // Check if email already exists
     const existingUser = await db.user.findUnique({
@@ -35,8 +35,7 @@ export async function POST(req: Request) {
         name,
         email,
         password: hashedPassword,
-        isPanitia: isPanitia || false, // Default false jika tidak diset
-        role: isPanitia ? "ADMIN" : "USER" // Set role berdasarkan isPanitia
+        role: "PANITIA" // Set langsung sebagai PANITIA
       }
     })
 

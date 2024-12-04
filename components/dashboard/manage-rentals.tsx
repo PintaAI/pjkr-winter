@@ -5,71 +5,58 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { RentalType } from "@prisma/client"
-import { updateRental, getRentalData } from "@/app/actions/dashboard"
+import { createRental, updateRental, deleteRental, getRentalData } from "@/app/actions/dashboard"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { formatWon } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 interface RentalForm {
-  type: RentalType
-  name: string
-  price: number
-  description: string
+  namaBarang: string
+  hargaSewa: number
   items: string[]
 }
 
+interface RentalData extends RentalForm {
+  id: string
+}
+
 const initialForm: RentalForm = {
-  type: "EQUIPMENT_FULLSET",
-  name: "",
-  price: 0,
-  description: "",
+  namaBarang: "",
+  hargaSewa: 0,
   items: []
 }
 
-const defaultRentals: RentalForm[] = [
-  {
-    type: "EQUIPMENT_FULLSET",
-    name: "Peralatan Ski Fullset",
-    price: 100000,
-    description: "Ski/snowboard, helm, dan perlengkapan keselamatan",
-    items: ["Ski/Snowboard", "Helm", "Pelindung lutut", "Pelindung siku"]
-  },
-  {
-    type: "CLOTHING_FULLSET",
-    name: "Pakaian Winter Fullset",
-    price: 50000,
-    description: "Jaket winter, celana, sarung tangan, dan kacamata",
-    items: ["Jaket Winter", "Celana Winter", "Sarung Tangan", "Kacamata Ski"]
-  }
-]
-
 export function ManageRentals() {
-  const [rentals, setRentals] = useState<RentalForm[]>(defaultRentals)
+  const [rentals, setRentals] = useState<RentalData[]>([])
   const [editForm, setEditForm] = useState<RentalForm>(initialForm)
+  const [selectedRentalId, setSelectedRentalId] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [newItem, setNewItem] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   useEffect(() => {
     loadRentalData()
   }, [])
 
   const loadRentalData = async () => {
-    const result = await getRentalData()
-    if (result.success && result.data) {
-      // Merge default items with database data
-      const updatedRentals = defaultRentals.map(defaultRental => {
-        const dbRental = result.data.find(r => r.type === defaultRental.type)
-        return dbRental ? {
-          ...defaultRental,
-          name: dbRental.name,
-          price: dbRental.price
-        } : defaultRental
-      })
-      setRentals(updatedRentals)
+    try {
+      const result = await getRentalData()
+      if (result.success && result.data) {
+        setRentals(result.data)
+      }
+    } catch (error) {
+      console.error("Error loading rental data:", error)
+      setError("Gagal memuat data sewa")
     }
   }
 
@@ -80,17 +67,53 @@ export function ManageRentals() {
     setSuccess(null)
 
     try {
-      const result = await updateRental(editForm)
+      let result
+      if (isEditing && selectedRentalId) {
+        result = await updateRental(selectedRentalId, {
+          namaBarang: editForm.namaBarang,
+          hargaSewa: editForm.hargaSewa,
+          items: editForm.items
+        })
+      } else {
+        result = await createRental(editForm)
+      }
+
       if (result.success) {
         setSuccess(result.message)
-        loadRentalData()
+        await loadRentalData()
         setIsEditing(false)
+        setSelectedRentalId(null)
         setEditForm(initialForm)
+        setDialogOpen(false)
       } else {
         setError(result.message)
       }
     } catch (error) {
-      setError("Terjadi kesalahan saat memperbarui data sewa")
+      setError("Terjadi kesalahan saat memproses data sewa")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus paket sewa ini?")) {
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const result = await deleteRental(id)
+      if (result.success) {
+        setSuccess(result.message)
+        await loadRentalData()
+      } else {
+        setError(result.message)
+      }
+    } catch (error) {
+      setError("Terjadi kesalahan saat menghapus paket sewa")
     } finally {
       setIsLoading(false)
     }
@@ -127,20 +150,130 @@ export function ManageRentals() {
         </Alert>
       )}
 
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger asChild>
+          <Button 
+            onClick={() => {
+              setIsEditing(false)
+              setSelectedRentalId(null)
+              setEditForm(initialForm)
+              setDialogOpen(true)
+            }}
+          >
+            Tambah Paket Sewa Baru
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isEditing ? "Edit Paket Sewa" : "Tambah Paket Sewa Baru"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isEditing && (
+              <div className="space-y-2">
+                <Label>Nama Paket</Label>
+                <Input
+                  value={editForm.namaBarang}
+                  onChange={(e) => setEditForm({
+                    ...editForm,
+                    namaBarang: e.target.value
+                  })}
+                  required
+                  disabled={isLoading}
+                  placeholder="Contoh: Paket Ski Pemula"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Harga Sewa</Label>
+              <Input
+                type="number"
+                value={editForm.hargaSewa}
+                onChange={(e) => setEditForm({
+                  ...editForm,
+                  hargaSewa: parseInt(e.target.value)
+                })}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Item yang Termasuk</Label>
+              <div className="flex space-x-2">
+                <Input
+                  value={newItem}
+                  onChange={(e) => setNewItem(e.target.value)}
+                  placeholder="Tambah item baru"
+                  disabled={isLoading}
+                />
+                <Button 
+                  type="button"
+                  onClick={addItem}
+                  disabled={isLoading}
+                >
+                  Tambah
+                </Button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {editForm.items.map((item, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="secondary"
+                    className="flex items-center gap-2"
+                  >
+                    {item}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 hover:bg-transparent"
+                      onClick={() => removeItem(index)}
+                      disabled={isLoading}
+                    >
+                      ×
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex space-x-2">
+              <Button 
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? "Menyimpan..." : (isEditing ? "Simpan Perubahan" : "Tambah Paket")}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => {
+                  setIsEditing(false)
+                  setSelectedRentalId(null)
+                  setEditForm(initialForm)
+                  setDialogOpen(false)
+                }}
+                disabled={isLoading}
+              >
+                Batal
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {rentals.map((rental) => (
-          <Card key={rental.type}>
+          <Card key={rental.id} className="relative">
             <CardHeader>
-              <CardTitle>{rental.name}</CardTitle>
+              <CardTitle>{rental.namaBarang}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
                   <p className="text-2xl font-bold text-blue-600">
-                    Rp {rental.price.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {rental.description}
+                    {formatWon(rental.hargaSewa)}
                   </p>
                 </div>
                 
@@ -155,140 +288,121 @@ export function ManageRentals() {
                   </div>
                 </div>
 
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setEditForm(rental)
-                    setIsEditing(true)
-                  }}
-                  disabled={isLoading}
-                >
-                  Edit Paket Sewa
-                </Button>
+                <div className="flex space-x-2">
+                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setEditForm({
+                            namaBarang: rental.namaBarang,
+                            hargaSewa: rental.hargaSewa,
+                            items: rental.items
+                          })
+                          setSelectedRentalId(rental.id)
+                          setIsEditing(true)
+                          setDialogOpen(true)
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Paket Sewa</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Harga Sewa</Label>
+                          <Input
+                            type="number"
+                            value={editForm.hargaSewa}
+                            onChange={(e) => setEditForm({
+                              ...editForm,
+                              hargaSewa: parseInt(e.target.value)
+                            })}
+                            required
+                            disabled={isLoading}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Item yang Termasuk</Label>
+                          <div className="flex space-x-2">
+                            <Input
+                              value={newItem}
+                              onChange={(e) => setNewItem(e.target.value)}
+                              placeholder="Tambah item baru"
+                              disabled={isLoading}
+                            />
+                            <Button 
+                              type="button"
+                              onClick={addItem}
+                              disabled={isLoading}
+                            >
+                              Tambah
+                            </Button>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {editForm.items.map((item, index) => (
+                              <Badge 
+                                key={index} 
+                                variant="secondary"
+                                className="flex items-center gap-2"
+                              >
+                                {item}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-4 w-4 p-0 hover:bg-transparent"
+                                  onClick={() => removeItem(index)}
+                                  disabled={isLoading}
+                                >
+                                  ×
+                                </Button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex space-x-2">
+                          <Button 
+                            type="submit"
+                            disabled={isLoading}
+                          >
+                            {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            onClick={() => {
+                              setIsEditing(false)
+                              setSelectedRentalId(null)
+                              setEditForm(initialForm)
+                              setDialogOpen(false)
+                            }}
+                            disabled={isLoading}
+                          >
+                            Batal
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                  <Button 
+                    variant="destructive"
+                    onClick={() => handleDelete(rental.id)}
+                    disabled={isLoading}
+                  >
+                    Hapus
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-
-      {isEditing && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Edit Paket Sewa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tipe Paket</Label>
-                <Input
-                  value={editForm.type}
-                  disabled
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Nama Paket</Label>
-                <Input
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({
-                    ...editForm,
-                    name: e.target.value
-                  })}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Harga</Label>
-                <Input
-                  type="number"
-                  value={editForm.price}
-                  onChange={(e) => setEditForm({
-                    ...editForm,
-                    price: parseInt(e.target.value)
-                  })}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Deskripsi</Label>
-                <Textarea
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({
-                    ...editForm,
-                    description: e.target.value
-                  })}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Item yang Termasuk</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    value={newItem}
-                    onChange={(e) => setNewItem(e.target.value)}
-                    placeholder="Tambah item baru"
-                    disabled={isLoading}
-                  />
-                  <Button 
-                    type="button"
-                    onClick={addItem}
-                    disabled={isLoading}
-                  >
-                    Tambah
-                  </Button>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {editForm.items.map((item, index) => (
-                    <Badge 
-                      key={index} 
-                      variant="secondary"
-                      className="flex items-center gap-2"
-                    >
-                      {item}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-4 w-4 p-0 hover:bg-transparent"
-                        onClick={() => removeItem(index)}
-                        disabled={isLoading}
-                      >
-                        ×
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex space-x-2">
-                <Button 
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => {
-                    setIsEditing(false)
-                    setEditForm(initialForm)
-                  }}
-                  disabled={isLoading}
-                >
-                  Batal
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

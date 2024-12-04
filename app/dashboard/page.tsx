@@ -1,122 +1,53 @@
-import { db } from "@/lib/db"
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { formatRupiah } from "@/lib/utils"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ManagePackages } from "@/components/dashboard/manage-packages"
 import { ManageBuses } from "@/components/dashboard/manage-buses"
 import { ManageRentals } from "@/components/dashboard/manage-rentals"
+import { ManageStatus } from "@/components/dashboard/manage-status"
+import { ManagePeserta } from "@/components/dashboard/manage-peserta"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { Users, Package, Bus, Wrench, CheckSquare } from "lucide-react"
 
-async function getPeserta() {
-  const peserta = await db.user.findMany({
-    include: {
-      tiket: true,
-      sewaan: true,
-      bus: true,
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
-  })
-  return peserta
-}
-
-export default async function DashboardPage() {
-  const peserta = await getPeserta()
-
+export default function DashboardPage() {
   return (
-    <div className="container py-10">
+    <div className="max-w-[1200px] mx-auto px-4 py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Dashboard Panitia</h1>
-        <LogoutButton />
+        <div className="flex items-center gap-4">
+          <Button asChild>
+            <Link href="/scan">Scan QR Code</Link>
+          </Button>
+          <LogoutButton />
+        </div>
       </div>
 
       <Tabs defaultValue="peserta" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="peserta">Daftar Peserta</TabsTrigger>
-          <TabsTrigger value="packages">Kelola Paket</TabsTrigger>
-          <TabsTrigger value="buses">Kelola Bus</TabsTrigger>
-          <TabsTrigger value="rentals">Kelola Peralatan</TabsTrigger>
+        <TabsList className="grid grid-cols-5 gap-4">
+          <TabsTrigger value="peserta" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden md:inline">Daftar Peserta</span>
+          </TabsTrigger>
+          <TabsTrigger value="packages" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            <span className="hidden md:inline">Kelola Paket</span>
+          </TabsTrigger>
+          <TabsTrigger value="buses" className="flex items-center gap-2">
+            <Bus className="h-4 w-4" />
+            <span className="hidden md:inline">Kelola Bus</span>
+          </TabsTrigger>
+          <TabsTrigger value="rentals" className="flex items-center gap-2">
+            <Wrench className="h-4 w-4" />
+            <span className="hidden md:inline">Kelola Peralatan</span>
+          </TabsTrigger>
+          <TabsTrigger value="status" className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4" />
+            <span className="hidden md:inline">Kelola Status</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="peserta">
-          <div className="rounded-md border">
-            <Table>
-              <TableCaption>Daftar peserta yang sudah terdaftar</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telepon</TableHead>
-                  <TableHead>Tiket</TableHead>
-                  <TableHead>Bus</TableHead>
-                  <TableHead>Sewaan</TableHead>
-                  <TableHead>Total Biaya</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {peserta.map((p) => {
-                  // Hitung total biaya
-                  const tiketCost = p.tiket.reduce((acc, t) => {
-                    return acc + t.harga
-                  }, 0)
-                  
-                  const sewaanCost = p.sewaan.reduce((acc, s) => {
-                    return acc + s.hargaSewa
-                  }, 0)
-
-                  const totalCost = tiketCost + sewaanCost
-
-                  return (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell>{p.email}</TableCell>
-                      <TableCell>{p.telepon}</TableCell>
-                      <TableCell>
-                        {p.tiket.map((t) => (
-                          <Badge key={t.id} variant="secondary" className="mr-1">
-                            {t.tipe === 'REGULAR' ? 'Regular' : 'Lift Gondola'}
-                          </Badge>
-                        ))}
-                      </TableCell>
-                      <TableCell>
-                        {p.bus ? (
-                          <Badge>
-                            {p.bus.namaBus}
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-500">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {p.sewaan.length > 0 ? (
-                          <div className="space-y-1">
-                            {p.sewaan.map((s) => (
-                              <Badge key={s.id} variant="outline" className="mr-1">
-                                {s.namaBarang}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-500">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatRupiah(totalCost)}</TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <ManagePeserta />
         </TabsContent>
 
         <TabsContent value="packages">
@@ -129,6 +60,10 @@ export default async function DashboardPage() {
 
         <TabsContent value="rentals">
           <ManageRentals />
+        </TabsContent>
+
+        <TabsContent value="status">
+          <ManageStatus />
         </TabsContent>
       </Tabs>
     </div>

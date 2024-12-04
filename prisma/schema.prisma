@@ -11,8 +11,8 @@ datasource db {
 }
 
 enum UserRole {
-  USER
-  ADMIN
+  PESERTA
+  PANITIA
 }
 
 enum UserPlan {
@@ -20,40 +20,20 @@ enum UserPlan {
   PRO
 }
 
-// Enum untuk jenis tiket
-enum TicketType {
-  REGULAR
-  LIFT_GONDOLA
-}
-
-// Enum untuk tipe bus
-enum BusType {
-  BUS_1
-  BUS_2
-  BUS_3
-}
-
-// Enum untuk jenis sewa
-enum RentalType {
-  EQUIPMENT_FULLSET
-  CLOTHING_FULLSET
-}
-
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          UserRole  @default(USER)
-  plan          UserPlan  @default(FREE)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  alamat        String?
-  telepon       String?
-  isPanitia     Boolean   @default(false)
-
+  id                    String    @id @default(cuid())
+  name                  String?
+  email                 String    @unique
+  emailVerified        DateTime?
+  image                 String?
+  password              String?
+  role                  UserRole  @default(PESERTA)
+  plan                  UserPlan  @default(FREE)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  alamat                String?
+  telepon               String?
+  
   // Relasi yang sudah ada
   accounts Account[]
   sessions Session[]
@@ -63,6 +43,7 @@ model User {
   sewaan  Rental[]
   bus     Bus?     @relation(fields: [busId], references: [id])
   busId   String?
+  status  StatusPeserta[] // Relasi dengan status peserta
 }
 
 model Account {
@@ -103,21 +84,23 @@ model VerificationToken {
 
 // Model Tiket
 model Ticket {
-  id        String     @id @default(cuid())
-  tipe      TicketType @default(REGULAR)
-  harga     Float
+  id          String     @id @default(cuid())
+  tipe        String     // Mengubah dari enum ke string untuk fleksibilitas
+  harga       Float
+  description String     @default("") 
+  features    String[]   @default([])
   
   // Relasi dengan peserta
-  peserta   User       @relation(fields: [pesertaId], references: [id])
-  pesertaId String
+  peserta     User       @relation(fields: [pesertaId], references: [id])
+  pesertaId   String
 }
 
 // Model Sewa
 model Rental {
   id          String     @id @default(cuid())
-  tipe        RentalType
-  namaBarang  String     // Menambahkan field namaBarang
+  namaBarang  String
   hargaSewa   Float
+  items       String[]   @default([])
   
   // Relasi dengan peserta
   peserta     User       @relation(fields: [pesertaId], references: [id])
@@ -128,10 +111,21 @@ model Rental {
 model Bus {
   id        String  @id @default(cuid())
   namaBus   String
-  tipe      BusType @unique
-  harga     Float
   kapasitas Int     @default(40)
   
   // Relasi dengan peserta
   peserta   User[]
+}
+
+// Model Status Peserta (Dinamis)
+model StatusPeserta {
+  id          String    @id @default(cuid())
+  nama        String    // Nama status (misal: "Absen Keberangkatan", "Terima Peralatan", dll)
+  nilai       Boolean   @default(false)  // Nilai status (true/false)
+  tanggal     DateTime? // Waktu status diubah
+  keterangan  String?   // Keterangan tambahan jika diperlukan
+  
+  // Relasi dengan peserta
+  peserta     User      @relation(fields: [pesertaId], references: [id])
+  pesertaId   String
 }

@@ -23,18 +23,12 @@ export const AuthForm = () => {
 
     try {
       if (mode === "register") {
-        // Tambahkan isPanitia ke values
-        const registerData = {
-          ...values,
-          isPanitia: true // Set otomatis sebagai panitia
-        }
-
         const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(registerData)
+          body: JSON.stringify(values)
         })
 
         const data = await response.json()

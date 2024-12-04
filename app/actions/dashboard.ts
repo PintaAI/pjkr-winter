@@ -1,91 +1,381 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { TicketType, BusType, RentalType } from "@prisma/client"
+import { revalidatePath } from "next/cache"
+import { UserRole, UserPlan } from "@prisma/client"
 
-interface PackageUpdate {
-  type: TicketType
-  price: number
-  description: string
+// Peserta Management Functions
+export async function getPesertaData() {
+  try {
+    const peserta = await db.user.findMany({
+      where: {
+        role: UserRole.PESERTA
+      },
+      include: {
+        tiket: true,
+        sewaan: true,
+        bus: true,
+        status: true
+      }
+    })
+
+    return { 
+      success: true, 
+      data: peserta.map(p => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        plan: p.plan,
+        alamat: p.alamat,
+        telepon: p.telepon,
+        tiket: p.tiket,
+        sewaan: p.sewaan,
+        bus: p.bus,
+        status: p.status
+      }))
+    }
+  } catch (error) {
+    console.error("[GET_PESERTA_DATA_ERROR]", error)
+    return { success: false, message: "Gagal mendapatkan data peserta" }
+  }
 }
 
-interface BusUpdate {
-  type: BusType
-  name: string
-  price: number
-  capacity: number
+export async function updatePeserta(id: string, data: {
+  name?: string
+  email?: string
+  plan?: UserPlan
+  alamat?: string
+  telepon?: string
+  busId?: string | null
+}) {
+  try {
+    await db.user.update({
+      where: { id },
+      data
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Data peserta berhasil diperbarui" }
+  } catch (error) {
+    console.error("[UPDATE_PESERTA_ERROR]", error)
+    return { success: false, message: "Gagal memperbarui data peserta" }
+  }
 }
 
-interface RentalUpdate {
-  type: RentalType
-  name: string
-  price: number
-  description: string
+export async function deletePeserta(id: string) {
+  try {
+    await db.user.delete({
+      where: { id }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Peserta berhasil dihapus" }
+  } catch (error) {
+    console.error("[DELETE_PESERTA_ERROR]", error)
+    return { success: false, message: "Gagal menghapus peserta" }
+  }
+}
+
+// Rental Management Functions
+export async function createRental(data: { 
+  namaBarang: string
+  hargaSewa: number
   items: string[]
-}
-
-export async function updatePackage(data: PackageUpdate) {
+}) {
   try {
-    // TODO: Implement package update in database
-    // Untuk saat ini kita hanya simulasikan update
-    console.log("Updating package:", data)
-    return { success: true, message: "Paket berhasil diperbarui" }
-  } catch (error) {
-    console.error("Error updating package:", error)
-    return { success: false, message: "Gagal memperbarui paket" }
-  }
-}
-
-export async function updateBus(data: BusUpdate) {
-  try {
-    const bus = await db.bus.upsert({
-      where: {
-        tipe: data.type
-      },
-      update: {
-        namaBus: data.name,
-        harga: data.price,
-        kapasitas: data.capacity
-      },
-      create: {
-        tipe: data.type,
-        namaBus: data.name,
-        harga: data.price,
-        kapasitas: data.capacity
-      }
+    // Dapatkan user panitia
+    const panitia = await db.user.findFirst({
+      where: { role: UserRole.PANITIA }
     })
 
-    return { success: true, message: "Bus berhasil diperbarui", data: bus }
-  } catch (error) {
-    console.error("Error updating bus:", error)
-    return { success: false, message: "Gagal memperbarui bus" }
-  }
-}
+    if (!panitia) {
+      return { success: false, message: "Tidak ada user panitia" }
+    }
 
-export async function updateRental(data: RentalUpdate) {
-  try {
-    // Karena kita menyimpan items sebagai bagian dari namaBarang,
-    // kita akan menggabungkannya menjadi satu string
-    const itemsList = data.items.join(", ")
-    
-    await db.rental.updateMany({
-      where: {
-        tipe: data.type
-      },
+    await db.rental.create({
       data: {
-        namaBarang: data.name,
-        hargaSewa: data.price
+        namaBarang: data.namaBarang,
+        hargaSewa: data.hargaSewa,
+        items: data.items,
+        pesertaId: panitia.id
       }
     })
 
+    revalidatePath("/dashboard")
+    return { success: true, message: "Paket sewa berhasil ditambahkan" }
+  } catch (error) {
+    console.error("[CREATE_RENTAL_ERROR]", error)
+    return { success: false, message: "Gagal menambahkan paket sewa" }
+  }
+}
+
+export async function updateRental(id: string, data: {
+  namaBarang: string
+  hargaSewa: number
+  items: string[]
+}) {
+  try {
+    // Pastikan rental dimiliki oleh panitia
+    const rental = await db.rental.findFirst({
+      where: {
+        id,
+        peserta: {
+          role: UserRole.PANITIA
+        }
+      }
+    })
+
+    if (!rental) {
+      return { success: false, message: "Paket sewa tidak ditemukan" }
+    }
+
+    await db.rental.update({
+      where: { id },
+      data: {
+        namaBarang: data.namaBarang,
+        hargaSewa: data.hargaSewa,
+        items: data.items
+      }
+    })
+
+    revalidatePath("/dashboard")
     return { success: true, message: "Paket sewa berhasil diperbarui" }
   } catch (error) {
-    console.error("Error updating rental:", error)
+    console.error("[UPDATE_RENTAL_ERROR]", error)
     return { success: false, message: "Gagal memperbarui paket sewa" }
   }
 }
 
-export async function getBusCapacityData() {
+export async function deleteRental(id: string) {
+  try {
+    // Pastikan rental dimiliki oleh panitia
+    const rental = await db.rental.findFirst({
+      where: {
+        id,
+        peserta: {
+          role: UserRole.PANITIA
+        }
+      }
+    })
+
+    if (!rental) {
+      return { success: false, message: "Paket sewa tidak ditemukan" }
+    }
+
+    await db.rental.delete({
+      where: { id }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Paket sewa berhasil dihapus" }
+  } catch (error) {
+    console.error("[DELETE_RENTAL_ERROR]", error)
+    return { success: false, message: "Gagal menghapus paket sewa" }
+  }
+}
+
+export async function getRentalData() {
+  try {
+    const rentals = await db.rental.findMany({
+      where: {
+        peserta: {
+          role: UserRole.PANITIA
+        }
+      }
+    })
+
+    return { 
+      success: true, 
+      data: rentals.map(rental => ({
+        id: rental.id,
+        namaBarang: rental.namaBarang,
+        hargaSewa: rental.hargaSewa,
+        items: rental.items
+      }))
+    }
+  } catch (error) {
+    console.error("[GET_RENTAL_DATA_ERROR]", error)
+    return { success: false, message: "Gagal mendapatkan data paket sewa" }
+  }
+}
+
+// Package Management Functions
+export async function createPackage(data: { 
+  tipe: string
+  harga: number
+  description: string
+  features: string[]
+}) {
+  try {
+    // Dapatkan user panitia
+    const panitia = await db.user.findFirst({
+      where: { role: UserRole.PANITIA }
+    })
+
+    if (!panitia) {
+      return { success: false, message: "Tidak ada user panitia" }
+    }
+
+    await db.ticket.create({
+      data: {
+        tipe: data.tipe,
+        harga: data.harga,
+        description: data.description,
+        features: data.features,
+        pesertaId: panitia.id
+      }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Paket berhasil ditambahkan" }
+  } catch (error) {
+    console.error("[CREATE_PACKAGE_ERROR]", error)
+    return { success: false, message: "Gagal menambahkan paket" }
+  }
+}
+
+export async function updatePackage(id: string, data: {
+  harga: number
+  description: string
+  features: string[]
+}) {
+  try {
+    // Pastikan paket dimiliki oleh panitia
+    const ticket = await db.ticket.findFirst({
+      where: {
+        id,
+        peserta: {
+          role: UserRole.PANITIA
+        }
+      }
+    })
+
+    if (!ticket) {
+      return { success: false, message: "Paket tidak ditemukan" }
+    }
+
+    await db.ticket.update({
+      where: { id },
+      data: {
+        harga: data.harga,
+        description: data.description,
+        features: data.features
+      }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Paket berhasil diperbarui" }
+  } catch (error) {
+    console.error("[UPDATE_PACKAGE_ERROR]", error)
+    return { success: false, message: "Gagal memperbarui paket" }
+  }
+}
+
+export async function deletePackage(id: string) {
+  try {
+    // Pastikan paket dimiliki oleh panitia
+    const ticket = await db.ticket.findFirst({
+      where: {
+        id,
+        peserta: {
+          role: UserRole.PANITIA
+        }
+      }
+    })
+
+    if (!ticket) {
+      return { success: false, message: "Paket tidak ditemukan" }
+    }
+
+    await db.ticket.delete({
+      where: { id }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Paket berhasil dihapus" }
+  } catch (error) {
+    console.error("[DELETE_PACKAGE_ERROR]", error)
+    return { success: false, message: "Gagal menghapus paket" }
+  }
+}
+
+export async function getPackageData() {
+  try {
+    const packages = await db.ticket.findMany({
+      where: {
+        peserta: {
+          role: UserRole.PANITIA
+        }
+      }
+    })
+
+    return { 
+      success: true, 
+      data: packages.map(pkg => ({
+        id: pkg.id,
+        tipe: pkg.tipe,
+        harga: pkg.harga,
+        description: pkg.description,
+        features: pkg.features
+      }))
+    }
+  } catch (error) {
+    console.error("[GET_PACKAGE_DATA_ERROR]", error)
+    return { success: false, message: "Gagal mendapatkan data paket" }
+  }
+}
+
+// Bus Management Functions
+export async function createBus(data: { namaBus: string; kapasitas: number }) {
+  try {
+    await db.bus.create({
+      data: {
+        namaBus: data.namaBus,
+        kapasitas: data.kapasitas
+      }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Bus berhasil ditambahkan" }
+  } catch (error) {
+    console.error("[CREATE_BUS_ERROR]", error)
+    return { success: false, message: "Gagal menambahkan bus" }
+  }
+}
+
+export async function updateBus(id: string, data: { namaBus: string; kapasitas: number }) {
+  try {
+    await db.bus.update({
+      where: { id },
+      data: {
+        namaBus: data.namaBus,
+        kapasitas: data.kapasitas
+      }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Bus berhasil diperbarui" }
+  } catch (error) {
+    console.error("[UPDATE_BUS_ERROR]", error)
+    return { success: false, message: "Gagal memperbarui bus" }
+  }
+}
+
+export async function deleteBus(id: string) {
+  try {
+    await db.bus.delete({
+      where: { id }
+    })
+
+    revalidatePath("/dashboard")
+    return { success: true, message: "Bus berhasil dihapus" }
+  } catch (error) {
+    console.error("[DELETE_BUS_ERROR]", error)
+    return { success: false, message: "Gagal menghapus bus" }
+  }
+}
+
+export async function getBusData() {
   try {
     const buses = await db.bus.findMany({
       include: {
@@ -95,38 +385,152 @@ export async function getBusCapacityData() {
       }
     })
 
-    return {
-      success: true,
+    return { 
+      success: true, 
       data: buses.map(bus => ({
-        type: bus.tipe,
-        name: bus.namaBus,
-        price: bus.harga,
-        capacity: bus.kapasitas,
-        currentOccupancy: bus._count.peserta
+        id: bus.id,
+        namaBus: bus.namaBus,
+        kapasitas: bus.kapasitas,
+        terisi: bus._count.peserta
       }))
     }
   } catch (error) {
-    console.error("Error fetching bus capacity:", error)
-    return { success: false, message: "Gagal mengambil data kapasitas bus" }
+    console.error("[GET_BUS_DATA_ERROR]", error)
+    return { success: false, message: "Gagal mendapatkan data bus" }
   }
 }
 
-export async function getRentalData() {
+// Status Management Functions
+export async function createStatusTemplate(nama: string, keterangan?: string) {
   try {
-    const rentals = await db.rental.groupBy({
-      by: ['tipe', 'namaBarang', 'hargaSewa'],
-    })
+    const peserta = await db.user.findMany({
+      where: {
+        role: UserRole.PESERTA
+      }
+    });
 
-    return {
-      success: true,
-      data: rentals.map(rental => ({
-        type: rental.tipe,
-        name: rental.namaBarang,
-        price: rental.hargaSewa
-      }))
-    }
+    const createPromises = peserta.map(p => 
+      db.statusPeserta.create({
+        data: {
+          nama,
+          keterangan,
+          peserta: {
+            connect: {
+              id: p.id
+            }
+          }
+        }
+      })
+    );
+
+    await Promise.all(createPromises);
+
+    revalidatePath("/dashboard");
+    return { success: true };
   } catch (error) {
-    console.error("Error fetching rental data:", error)
-    return { success: false, message: "Gagal mengambil data sewa" }
+    console.error("[CREATE_STATUS_ERROR]", error);
+    return { success: false, error: "Gagal membuat status" };
+  }
+}
+
+export async function updateStatusTemplate(statusNama: string, newNama: string, newKeterangan?: string) {
+  try {
+    await db.statusPeserta.updateMany({
+      where: { nama: statusNama },
+      data: {
+        nama: newNama,
+        keterangan: newKeterangan,
+      }
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("[UPDATE_STATUS_ERROR]", error);
+    return { success: false, error: "Gagal mengupdate status" };
+  }
+}
+
+export async function deleteStatusTemplate(statusNama: string) {
+  try {
+    await db.statusPeserta.deleteMany({
+      where: { nama: statusNama }
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("[DELETE_STATUS_ERROR]", error);
+    return { success: false, error: "Gagal menghapus status" };
+  }
+}
+
+export async function updateStatusPeserta(
+  pesertaId: string,
+  statusNama: string,
+  nilai: boolean,
+  keterangan?: string
+) {
+  try {
+    await db.statusPeserta.updateMany({
+      where: {
+        pesertaId,
+        nama: statusNama
+      },
+      data: {
+        nilai,
+        keterangan,
+        tanggal: new Date(),
+      }
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("[UPDATE_STATUS_PESERTA_ERROR]", error);
+    return { success: false, error: "Gagal mengupdate status peserta" };
+  }
+}
+
+export async function getAllStatusTemplates() {
+  try {
+    const statuses = await db.statusPeserta.groupBy({
+      by: ['nama'],
+      _count: {
+        nama: true
+      },
+      orderBy: {
+        nama: 'asc'
+      }
+    });
+
+    return { 
+      success: true, 
+      data: statuses.map(s => ({
+        nama: s.nama,
+        count: s._count.nama
+      }))
+    };
+  } catch (error) {
+    console.error("[GET_ALL_STATUS_ERROR]", error);
+    return { success: false, error: "Gagal mendapatkan data status" };
+  }
+}
+
+export async function getPesertaStatus(pesertaId: string) {
+  try {
+    const statuses = await db.statusPeserta.findMany({
+      where: {
+        pesertaId
+      },
+      orderBy: {
+        nama: 'asc'
+      }
+    });
+
+    return { success: true, data: statuses };
+  } catch (error) {
+    console.error("[GET_PESERTA_STATUS_ERROR]", error);
+    return { success: false, error: "Gagal mendapatkan status peserta" };
   }
 }

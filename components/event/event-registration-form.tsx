@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { TicketType, RentalType, BusType } from '@prisma/client'
-import { registerEvent, getBusCapacity, getTicketPrices, getRentalPrices } from '@/app/actions/event-registration'
+import { registerEvent, getBusData, getTicketData, getRentalData } from '@/app/actions/event-registration'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -18,12 +17,9 @@ interface FormData {
   email: string
   phone: string
   address: string
-  ticketType: TicketType
-  rentals: {
-    type: RentalType
-    items: string[]
-  }
-  busType: BusType | ""
+  ticketType: string
+  rentals: string[] // Ubah ke string[] untuk ID rental
+  busId: string | ""
 }
 
 const initialFormData: FormData = {
@@ -32,83 +28,58 @@ const initialFormData: FormData = {
   phone: "",
   address: "",
   ticketType: "REGULAR",
-  rentals: {
-    type: "EQUIPMENT_FULLSET",
-    items: []
-  },
-  busType: ""
+  rentals: [],
+  busId: ""
 }
 
-interface BusCapacity {
-  BUS_1: number;
-  BUS_2: number;
-  BUS_3: number;
-  details: {
-    [key in BusType]: {
-      namaBus: string;
-      harga: number;
-      kapasitas: number;
-    }
-  }
+interface BusData {
+  id: string
+  namaBus: string
+  kapasitas: number
+  terisi: number
 }
 
-interface TicketPrices {
-  REGULAR: number;
-  LIFT_GONDOLA: number;
+interface TicketData {
+  tipe: string
+  harga: number
+  description: string
+  features: string[]
 }
 
-interface RentalInfo {
-  price: number;
-  name: string;
-}
-
-interface RentalPrices {
-  EQUIPMENT_FULLSET: RentalInfo;
-  CLOTHING_FULLSET: RentalInfo;
+interface RentalData {
+  id: string
+  namaBarang: string
+  hargaSewa: number
+  items: string[]
 }
 
 export default function EventRegistrationForm() {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [busCapacity, setBusCapacity] = useState<BusCapacity>({
-    BUS_1: 0,
-    BUS_2: 0,
-    BUS_3: 0,
-    details: {
-      BUS_1: { namaBus: '', harga: 0, kapasitas: 40 },
-      BUS_2: { namaBus: '', harga: 0, kapasitas: 40 },
-      BUS_3: { namaBus: '', harga: 0, kapasitas: 40 }
-    }
-  })
-  const [ticketPrices, setTicketPrices] = useState<TicketPrices>({
-    REGULAR: 0,
-    LIFT_GONDOLA: 0
-  })
-  const [rentalPrices, setRentalPrices] = useState<RentalPrices>({
-    EQUIPMENT_FULLSET: { price: 0, name: '' },
-    CLOTHING_FULLSET: { price: 0, name: '' }
-  })
+  const [busData, setBusData] = useState<BusData[]>([])
+  const [ticketData, setTicketData] = useState<TicketData[]>([])
+  const [rentalData, setRentalData] = useState<RentalData[]>([])
   const router = useRouter()
 
   useEffect(() => {
     const loadData = async () => {
-      // Load bus capacity
-      const busResult = await getBusCapacity()
+      // Load bus data
+      const busResult = await getBusData()
       if (busResult.success) {
-        setBusCapacity(busResult.data)
+        setBusData(busResult.data ?? [])
       }
 
-      // Load ticket prices
-      const ticketResult = await getTicketPrices()
+      // Load ticket data
+      const ticketResult = await getTicketData()
       if (ticketResult.success) {
-        setTicketPrices(ticketResult.data)
+        setTicketData(ticketResult.data ?? [])
       }
 
-      // Load rental prices
-      const rentalResult = await getRentalPrices()
+      // Load rental data
+      const rentalResult = await getRentalData()
       if (rentalResult.success) {
-        setRentalPrices(rentalResult.data)
+        setRentalData(rentalResult.data ?? [])
       }
     }
     loadData()
@@ -134,6 +105,22 @@ export default function EventRegistrationForm() {
       console.error('Error:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleRentalChange = (id: string, checked: boolean) => {
+    if (checked) {
+      if (!formData.rentals.includes(id)) {
+        setFormData({
+          ...formData,
+          rentals: [...formData.rentals, id]
+        })
+      }
+    } else {
+      setFormData({
+        ...formData,
+        rentals: formData.rentals.filter(rentalId => rentalId !== id)
+      })
     }
   }
 
@@ -203,51 +190,37 @@ export default function EventRegistrationForm() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Pilihan Tiket</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card 
-            className={`cursor-pointer transition-all ${
-              formData.ticketType === 'REGULAR' 
-                ? 'border-2 border-blue-500' 
-                : 'hover:border-blue-200'
-            }`}
-            onClick={() => setFormData({...formData, ticketType: 'REGULAR'})}
-          >
-            <CardHeader>
-              <CardTitle>Regular</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-blue-600">
-                {formatWon(ticketPrices.REGULAR)}
-              </p>
-              <ul className="mt-4 space-y-2">
-                <li>✓ Akses area ski pemula</li>
-                <li>✓ Instruktur dasar</li>
-                <li>✓ Peralatan standar</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card 
-            className={`cursor-pointer transition-all ${
-              formData.ticketType === 'LIFT_GONDOLA' 
-                ? 'border-2 border-blue-500' 
-                : 'hover:border-blue-200'
-            }`}
-            onClick={() => setFormData({...formData, ticketType: 'LIFT_GONDOLA'})}
-          >
-            <CardHeader>
-              <CardTitle>Lift Gondola</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-blue-600">
-                {formatWon(ticketPrices.LIFT_GONDOLA)}
-              </p>
-              <ul className="mt-4 space-y-2">
-                <li>✓ Akses Lift Gondola</li>
-                <li>✓ Area ski lanjutan</li>
-                <li>✓ Instruktur profesional</li>
-              </ul>
-            </CardContent>
-          </Card>
+          {ticketData.map((ticket) => (
+            <Card 
+              key={ticket.tipe}
+              className={`cursor-pointer transition-all ${
+                formData.ticketType === ticket.tipe 
+                  ? 'border-2 border-blue-500' 
+                  : 'hover:border-blue-200'
+              }`}
+              onClick={() => setFormData({...formData, ticketType: ticket.tipe})}
+            >
+              <CardHeader>
+                <CardTitle>{ticket.tipe}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold text-blue-600">
+                  {formatWon(ticket.harga)}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {ticket.description}
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {ticket.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <span className="text-green-500">✓</span>
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
@@ -255,14 +228,13 @@ export default function EventRegistrationForm() {
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Pilihan Bus</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(['BUS_1', 'BUS_2', 'BUS_3'] as BusType[]).map((bus) => {
-            const busDetail = busCapacity.details[bus]
-            const isFull = (busCapacity[bus] || 0) >= busDetail.kapasitas
-            const isSelected = formData.busType === bus
+          {busData.map((bus) => {
+            const isFull = bus.terisi >= bus.kapasitas
+            const isSelected = formData.busId === bus.id
 
             return (
               <Card 
-                key={bus}
+                key={bus.id}
                 className={`cursor-pointer transition-all ${
                   isSelected 
                     ? 'border-2 border-blue-500' 
@@ -272,22 +244,19 @@ export default function EventRegistrationForm() {
                 }`}
                 onClick={() => {
                   if (!isFull) {
-                    setFormData({...formData, busType: bus})
+                    setFormData({...formData, busId: bus.id})
                   }
                 }}
               >
                 <CardHeader>
                   <CardTitle>
-                    {busDetail.namaBus}
+                    {bus.namaBus}
                     {isFull && <span className="text-red-500 text-sm"> (Penuh)</span>}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatWon(busDetail.harga)}
-                  </p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Kapasitas: {busCapacity[bus]}/{busDetail.kapasitas}
+                    Kapasitas: {bus.terisi}/{bus.kapasitas}
                   </p>
                 </CardContent>
               </Card>
@@ -302,73 +271,32 @@ export default function EventRegistrationForm() {
           <CardTitle>Sewa Peralatan</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="equipment-fullset"
-              checked={formData.rentals.type === 'EQUIPMENT_FULLSET' && formData.rentals.items.includes('fullset')}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  setFormData({
-                    ...formData,
-                    rentals: {
-                      type: 'EQUIPMENT_FULLSET',
-                      items: ['fullset']
-                    }
-                  })
-                } else {
-                  setFormData({
-                    ...formData,
-                    rentals: {
-                      type: 'EQUIPMENT_FULLSET',
-                      items: []
-                    }
-                  })
+          {rentalData.map((rental) => (
+            <div key={rental.id} className="flex items-center space-x-2">
+              <Checkbox
+                id={rental.id}
+                checked={formData.rentals.includes(rental.id)}
+                onCheckedChange={(checked) => 
+                  handleRentalChange(rental.id, checked as boolean)
                 }
-              }}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <Label htmlFor="equipment-fullset">
-                {rentalPrices.EQUIPMENT_FULLSET.name}
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Termasuk ski/snowboard, helm, dan perlengkapan keselamatan ({formatWon(rentalPrices.EQUIPMENT_FULLSET.price)})
-              </p>
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label htmlFor={rental.id}>
+                  {rental.namaBarang}
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  {formatWon(rental.hargaSewa)}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {rental.items.map((item, index) => (
+                    <li key={index} className="text-sm text-muted-foreground">
+                      • {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="clothing-fullset"
-              checked={formData.rentals.type === 'CLOTHING_FULLSET' && formData.rentals.items.includes('fullset')}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  setFormData({
-                    ...formData,
-                    rentals: {
-                      type: 'CLOTHING_FULLSET',
-                      items: ['fullset']
-                    }
-                  })
-                } else {
-                  setFormData({
-                    ...formData,
-                    rentals: {
-                      type: 'CLOTHING_FULLSET',
-                      items: []
-                    }
-                  })
-                }
-              }}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <Label htmlFor="clothing-fullset">
-                {rentalPrices.CLOTHING_FULLSET.name}
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Termasuk jaket winter, celana, sarung tangan, dan kacamata ({formatWon(rentalPrices.CLOTHING_FULLSET.price)})
-              </p>
-            </div>
-          </div>
+          ))}
         </CardContent>
       </Card>
 
