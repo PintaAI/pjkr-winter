@@ -181,18 +181,63 @@ export async function registerEvent(data: EventRegistrationData) {
       }
     }
 
-    // Buat status peserta default
-    await db.statusPeserta.create({
-      data: {
-        nama: "Pendaftaran",
-        nilai: true,
-        tanggal: new Date(),
-        keterangan: "Pendaftaran berhasil",
-        pesertaId: user.id
+    // Buat status-status peserta
+    const statusList = [
+      {
+        nama: "Pembayaran",
+        nilai: false,
+        keterangan: "Menunggu konfirmasi pembayaran"
+      },
+      {
+        nama: "Absensi Keberangkatan",
+        nilai: false,
+        keterangan: "Belum absen keberangkatan"
+      },
+      {
+        nama: "Absensi Kepulangan",
+        nilai: false,
+        keterangan: "Belum absen kepulangan"
       }
-    })
+    ]
 
-    return { success: true, message: 'Pendaftaran berhasil', userId: user.id }
+    // Tambahkan status untuk setiap peralatan yang disewa
+    if (rentals.length > 0) {
+      const rentalConfigs = await db.rental.findMany({
+        where: {
+          id: {
+            in: rentals
+          }
+        }
+      })
+
+      for (const rental of rentalConfigs) {
+        statusList.push({
+          nama: `Pengambilan ${rental.namaBarang}`,
+          nilai: false,
+          keterangan: `Belum mengambil ${rental.namaBarang}`
+        })
+        statusList.push({
+          nama: `Pengembalian ${rental.namaBarang}`,
+          nilai: false,
+          keterangan: `Belum mengembalikan ${rental.namaBarang}`
+        })
+      }
+    }
+
+    // Create semua status
+    for (const status of statusList) {
+      await db.statusPeserta.create({
+        data: {
+          nama: status.nama,
+          nilai: status.nilai,
+          tanggal: new Date(),
+          keterangan: status.keterangan,
+          pesertaId: user.id
+        }
+      })
+    }
+
+    return { success: true, message: 'Pendaftaran berhasil, silahkan lakukan pembayaran', userId: user.id }
   } catch (error) {
     console.error('Error in event registration:', error)
     return { success: false, message: 'Terjadi kesalahan saat mendaftar' }

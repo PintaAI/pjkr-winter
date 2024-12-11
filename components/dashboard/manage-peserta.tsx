@@ -51,6 +51,7 @@ interface BusData {
 }
 
 export function ManagePeserta() {
+  // State tetap sama seperti sebelumnya
   const [peserta, setPeserta] = useState<any[]>([])
   const [buses, setBuses] = useState<BusData[]>([])
   const [editForm, setEditForm] = useState<PesertaForm | null>(null)
@@ -86,6 +87,7 @@ export function ManagePeserta() {
     }
   }
 
+  // Handler functions tetap sama
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editForm || !selectedPesertaId) return
@@ -172,11 +174,7 @@ export function ManagePeserta() {
           <TableHeader>
             <TableRow>
               <TableHead>Nama</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Telepon</TableHead>
               <TableHead>Tiket</TableHead>
-              <TableHead>Bus</TableHead>
-              <TableHead>Sewaan</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Total Biaya</TableHead>
               <TableHead>Aksi</TableHead>
@@ -205,8 +203,6 @@ export function ManagePeserta() {
                       {p.name}
                     </button>
                   </TableCell>
-                  <TableCell>{p.email}</TableCell>
-                  <TableCell>{p.telepon}</TableCell>
                   <TableCell>
                     {p.tiket.map((t: any) => (
                       <Badge
@@ -217,30 +213,6 @@ export function ManagePeserta() {
                         {t.tipe}
                       </Badge>
                     ))}
-                  </TableCell>
-                  <TableCell>
-                    {p.bus ? (
-                      <Badge>{p.bus.namaBus}</Badge>
-                    ) : (
-                      <span className="text-gray-500">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {p.sewaan.length > 0 ? (
-                      <div className="space-y-1">
-                        {p.sewaan.map((s: any) => (
-                          <Badge
-                            key={s.id}
-                            variant="outline"
-                            className="mr-1"
-                          >
-                            {s.namaBarang}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-500">-</span>
-                    )}
                   </TableCell>
                   <TableCell>
                     {p.status.length > 0 ? (

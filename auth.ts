@@ -22,14 +22,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     }
   },
   callbacks: {
-   async session({session,token}){
-    if (session.user && token.sub) {
+   async session({session, token}){
+    // Pastikan token.sub selalu ada sebelum mengakses session
+    if (!token.sub) return session;
+
+    if (session.user) {
       session.user.id = token.sub;
-    }
-
-    session.user.plan = UserPlan.PRO;
-
-    if (token.role && session.user) {
+      session.user.plan = UserPlan.PRO;
       session.user.role = token.role as UserRole;
     }
 

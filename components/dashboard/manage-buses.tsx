@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { createBus, updateBus, deleteBus, getBusData } from "@/app/actions/dashboard"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ const initialForm: BusForm = {
 }
 
 export function ManageBuses() {
+  const router = useRouter()
   const [buses, setBuses] = useState<BusData[]>([])
   const [editForm, setEditForm] = useState<BusForm>(initialForm)
   const [selectedBusId, setSelectedBusId] = useState<string | null>(null)
@@ -101,6 +103,10 @@ export function ManageBuses() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleBusClick = (busId: string) => {
+    router.push(`/bus/${busId}`)
   }
 
   return (
@@ -185,7 +191,11 @@ export function ManageBuses() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {buses.map((bus) => (
-          <Card key={bus.id}>
+          <Card 
+            key={bus.id}
+            className="cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => handleBusClick(bus.id)}
+          >
             <CardHeader>
               <CardTitle>{bus.namaBus}</CardTitle>
             </CardHeader>
@@ -213,7 +223,8 @@ export function ManageBuses() {
                     <DialogTrigger asChild>
                       <Button 
                         variant="outline"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation()
                           setEditForm({
                             namaBus: bus.namaBus,
                             kapasitas: bus.kapasitas
@@ -225,7 +236,7 @@ export function ManageBuses() {
                         Edit
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent onClick={(e) => e.stopPropagation()}>
                       <DialogHeader>
                         <DialogTitle>Edit Bus</DialogTitle>
                       </DialogHeader>
@@ -286,7 +297,10 @@ export function ManageBuses() {
                   </Dialog>
                   <Button 
                     variant="destructive"
-                    onClick={() => handleDelete(bus.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(bus.id)
+                    }}
                     disabled={bus.terisi > 0}
                   >
                     Hapus

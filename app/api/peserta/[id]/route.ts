@@ -12,6 +12,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
         tiket: true,
         sewaan: true,
         bus: true,
+        status: true, // Include status
       },
     });
 
@@ -49,6 +50,12 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
         sudahTerimaMakanan,
         ...(absenKeberangkatan && { tanggalKeberangkatan: new Date() }),
         ...(absenKepulangan && { tanggalKepulangan: new Date() }),
+      },
+      include: {
+        tiket: true,
+        sewaan: true,
+        bus: true,
+        status: true, // Include status in response
       },
     });
 

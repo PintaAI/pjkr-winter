@@ -3,6 +3,7 @@
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { UserRole, UserPlan } from "@prisma/client"
+import { auth } from "@/auth"
 
 // Peserta Management Functions
 export async function getPesertaData() {
@@ -64,9 +65,35 @@ export async function updatePeserta(id: string, data: {
 
 export async function deletePeserta(id: string) {
   try {
-    await db.user.delete({
-      where: { id }
-    })
+    // Check autentikasi dan role
+    const session = await auth()
+    if (!session) {
+      return { success: false, message: "Anda harus login terlebih dahulu" }
+    }
+    
+    if (session.user.role !== UserRole.PANITIA) {
+      return { success: false, message: "Anda tidak memiliki akses untuk menghapus peserta" }
+    }
+
+    // Hapus semua relasi terlebih dahulu
+    await db.$transaction([
+      // Hapus status peserta
+      db.statusPeserta.deleteMany({
+        where: { pesertaId: id }
+      }),
+      // Hapus tiket peserta
+      db.ticket.deleteMany({
+        where: { pesertaId: id }
+      }),
+      // Hapus sewaan peserta
+      db.rental.deleteMany({
+        where: { pesertaId: id }
+      }),
+      // Hapus user/peserta
+      db.user.delete({
+        where: { id }
+      })
+    ])
 
     revalidatePath("/dashboard")
     return { success: true, message: "Peserta berhasil dihapus" }
@@ -400,6 +427,44 @@ export async function getBusData() {
   }
 }
 
+// Tambahkan fungsi getBusDetail
+export async function getBusDetail(id: string) {
+  try {
+    const bus = await db.bus.findUnique({
+      where: { id },
+      include: {
+        peserta: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            alamat: true,
+            telepon: true,
+          },
+        },
+      },
+    })
+
+    if (!bus) {
+      return { success: false, message: "Bus tidak ditemukan" }
+    }
+
+    return { 
+      success: true, 
+      data: {
+        id: bus.id,
+        namaBus: bus.namaBus,
+        kapasitas: bus.kapasitas,
+        peserta: bus.peserta
+      }
+    }
+  } catch (error) {
+    console.error("[GET_BUS_DETAIL_ERROR]", error)
+    return { success: false, message: "Gagal mendapatkan detail bus" }
+  }
+}
+
 // Status Management Functions
 export async function createStatusTemplate(nama: string, keterangan?: string) {
   try {
@@ -496,33 +561,6 @@ export async function getAllStatusTemplates() {
   try {
     const statuses = await db.statusPeserta.groupBy({
       by: ['nama'],
-      _count: {
-        nama: true
-      },
-      orderBy: {
-        nama: 'asc'
-      }
-    });
-
-    return { 
-      success: true, 
-      data: statuses.map(s => ({
-        nama: s.nama,
-        count: s._count.nama
-      }))
-    };
-  } catch (error) {
-    console.error("[GET_ALL_STATUS_ERROR]", error);
-    return { success: false, error: "Gagal mendapatkan data status" };
-  }
-}
-
-export async function getPesertaStatus(pesertaId: string) {
-  try {
-    const statuses = await db.statusPeserta.findMany({
-      where: {
-        pesertaId
-      },
       orderBy: {
         nama: 'asc'
       }
