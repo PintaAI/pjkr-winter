@@ -561,14 +561,25 @@ export async function getAllStatusTemplates() {
   try {
     const statuses = await db.statusPeserta.groupBy({
       by: ['nama'],
+      _count: {
+        nama: true
+      },
       orderBy: {
         nama: 'asc'
       }
     });
 
-    return { success: true, data: statuses };
+    return { 
+      success: true, 
+      data: statuses.map(status => ({
+        nama: status.nama,
+        count: status._count.nama
+      }))
+    };
   } catch (error) {
     console.error("[GET_PESERTA_STATUS_ERROR]", error);
     return { success: false, error: "Gagal mendapatkan status peserta" };
   }
 }
+
+// ... kode lainnya tetap sama ...

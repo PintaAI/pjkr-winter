@@ -1,6 +1,5 @@
 "use client"
 
-import { LoginSchema, RegisterSchema } from "@/schemas"
 import { DEFAULT_REDIRECT_URL } from "@/routes"
 import { useState } from "react"
 import { signIn } from "next-auth/react"
@@ -11,7 +10,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-export const AuthForm = () => {
+interface AuthFormProps {
+  mode?: "login" | "register"
+}
+
+export const AuthForm = ({ mode = "login" }: AuthFormProps) => {
   const [error, setError] = useState<string | undefined>()
   const [success, setSuccess] = useState<string | undefined>()
   const [isPending, setIsPending] = useState(false)
@@ -73,7 +76,7 @@ export const AuthForm = () => {
   }
 
   return (
-    <Tabs defaultValue="login" className="w-full max-w-md mx-auto">
+    <Tabs defaultValue={mode} className="w-full max-w-md mx-auto">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="login">Login</TabsTrigger>
         <TabsTrigger value="register">Register</TabsTrigger>
