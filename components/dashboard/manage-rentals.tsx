@@ -42,7 +42,8 @@ export function ManageRentals() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [newItem, setNewItem] = useState("")
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
   useEffect(() => {
     loadRentalData()
@@ -84,7 +85,8 @@ export function ManageRentals() {
         setIsEditing(false)
         setSelectedRentalId(null)
         setEditForm(initialForm)
-        setDialogOpen(false)
+        setAddDialogOpen(false)
+        setEditDialogOpen(false)
       } else {
         setError(result.message)
       }
@@ -150,14 +152,15 @@ export function ManageRentals() {
         </Alert>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Dialog untuk Tambah Paket Sewa Baru */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogTrigger asChild>
           <Button 
             onClick={() => {
               setIsEditing(false)
               setSelectedRentalId(null)
               setEditForm(initialForm)
-              setDialogOpen(true)
+              setAddDialogOpen(true)
             }}
           >
             Tambah Paket Sewa Baru
@@ -165,24 +168,22 @@ export function ManageRentals() {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{isEditing ? "Edit Paket Sewa" : "Tambah Paket Sewa Baru"}</DialogTitle>
+            <DialogTitle>Tambah Paket Sewa Baru</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isEditing && (
-              <div className="space-y-2">
-                <Label>Nama Paket</Label>
-                <Input
-                  value={editForm.namaBarang}
-                  onChange={(e) => setEditForm({
-                    ...editForm,
-                    namaBarang: e.target.value
-                  })}
-                  required
-                  disabled={isLoading}
-                  placeholder="Contoh: Paket Ski Pemula"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Nama Paket</Label>
+              <Input
+                value={editForm.namaBarang}
+                onChange={(e) => setEditForm({
+                  ...editForm,
+                  namaBarang: e.target.value
+                })}
+                required
+                disabled={isLoading}
+                placeholder="Contoh: Paket Ski Pemula"
+              />
+            </div>
 
             <div className="space-y-2">
               <Label>Harga Sewa</Label>
@@ -243,7 +244,7 @@ export function ManageRentals() {
                 type="submit"
                 disabled={isLoading}
               >
-                {isLoading ? "Menyimpan..." : (isEditing ? "Simpan Perubahan" : "Tambah Paket")}
+                {isLoading ? "Menyimpan..." : "Tambah Paket"}
               </Button>
               <Button 
                 type="button" 
@@ -252,7 +253,7 @@ export function ManageRentals() {
                   setIsEditing(false)
                   setSelectedRentalId(null)
                   setEditForm(initialForm)
-                  setDialogOpen(false)
+                  setAddDialogOpen(false)
                 }}
                 disabled={isLoading}
               >
@@ -289,7 +290,8 @@ export function ManageRentals() {
                 </div>
 
                 <div className="flex space-x-2">
-                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  {/* Dialog untuk Edit Paket Sewa */}
+                  <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 
                         variant="outline"
@@ -301,7 +303,7 @@ export function ManageRentals() {
                           })
                           setSelectedRentalId(rental.id)
                           setIsEditing(true)
-                          setDialogOpen(true)
+                          setEditDialogOpen(true)
                         }}
                       >
                         Edit
@@ -380,7 +382,7 @@ export function ManageRentals() {
                               setIsEditing(false)
                               setSelectedRentalId(null)
                               setEditForm(initialForm)
-                              setDialogOpen(false)
+                              setEditDialogOpen(false)
                             }}
                             disabled={isLoading}
                           >

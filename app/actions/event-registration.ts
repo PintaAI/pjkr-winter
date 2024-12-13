@@ -200,29 +200,7 @@ export async function registerEvent(data: EventRegistrationData) {
       }
     ]
 
-    // Tambahkan status untuk setiap peralatan yang disewa
-    if (rentals.length > 0) {
-      const rentalConfigs = await db.rental.findMany({
-        where: {
-          id: {
-            in: rentals
-          }
-        }
-      })
 
-      for (const rental of rentalConfigs) {
-        statusList.push({
-          nama: `Pengambilan ${rental.namaBarang}`,
-          nilai: false,
-          keterangan: `Belum mengambil ${rental.namaBarang}`
-        })
-        statusList.push({
-          nama: `Pengembalian ${rental.namaBarang}`,
-          nilai: false,
-          keterangan: `Belum mengembalikan ${rental.namaBarang}`
-        })
-      }
-    }
 
     // Create semua status
     for (const status of statusList) {

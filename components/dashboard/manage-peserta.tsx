@@ -28,8 +28,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { QrCode } from "lucide-react"
+import { QrCode, Search } from "lucide-react"
 import Link from "next/link"
 import { formatWon } from "@/lib/utils"
 import { getPesertaData, updatePeserta, deletePeserta, getBusData } from "@/app/actions/dashboard"
@@ -51,8 +59,8 @@ interface BusData {
 }
 
 export function ManagePeserta() {
-  // State tetap sama seperti sebelumnya
   const [peserta, setPeserta] = useState<any[]>([])
+  const [filteredPeserta, setFilteredPeserta] = useState<any[]>([])
   const [buses, setBuses] = useState<BusData[]>([])
   const [editForm, setEditForm] = useState<PesertaForm | null>(null)
   const [selectedPesertaId, setSelectedPesertaId] = useState<string | null>(null)
@@ -60,12 +68,17 @@ export function ManagePeserta() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [cardDialogOpen, setCardDialogOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPeserta, setSelectedPeserta] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
     loadData()
   }, [])
+
+  useEffect(() => {
+    filterPeserta()
+  }, [searchQuery, peserta])
 
   const loadData = async () => {
     try {
@@ -76,6 +89,7 @@ export function ManagePeserta() {
 
       if (pesertaResult.success && pesertaResult.data) {
         setPeserta(pesertaResult.data)
+        setFilteredPeserta(pesertaResult.data)
       }
 
       if (busResult.success && busResult.data) {
@@ -87,7 +101,20 @@ export function ManagePeserta() {
     }
   }
 
-  // Handler functions tetap sama
+  const filterPeserta = () => {
+    let filtered = peserta
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.email.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    setFilteredPeserta(filtered)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editForm || !selectedPesertaId) return
@@ -141,7 +168,7 @@ export function ManagePeserta() {
 
   const handleShowCard = (p: any) => {
     setSelectedPeserta(p)
-    setCardDialogOpen(true)
+    setDrawerOpen(true)
   }
 
   return (
@@ -158,39 +185,52 @@ export function ManagePeserta() {
         </Alert>
       )}
 
-      {/* Dialog untuk PesertaCard */}
-      <Dialog open={cardDialogOpen} onOpenChange={setCardDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Detail Peserta</DialogTitle>
-          </DialogHeader>
-          {selectedPeserta && <PesertaCard peserta={selectedPeserta} />}
-        </DialogContent>
-      </Dialog>
+      {/* Search Section */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+        <Input
+          placeholder="Cari nama atau email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
-      <div className="rounded-md border">
+      {/* Drawer untuk PesertaCard */}
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader className="border-b">
+            <DrawerTitle>Detail Peserta</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl">
+              {selectedPeserta && <PesertaCard peserta={selectedPeserta} />}
+            </div>
+          </div>
+          <DrawerFooter className="border-t">
+            <DrawerClose asChild>
+              <Button variant="outline" className="w-full">Tutup</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Responsive Table */}
+      <div className="rounded-md border overflow-x-auto">
         <Table>
-          <TableCaption>Daftar peserta yang sudah terdaftar</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Nama</TableHead>
-              <TableHead>Tiket</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Total Biaya</TableHead>
+              <TableHead className="hidden sm:table-cell">Tiket</TableHead>
+              <TableHead>Bus</TableHead>
+              <TableHead className="hidden sm:table-cell">Total Biaya</TableHead>
               <TableHead>Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {peserta.map((p) => {
-              // Hitung total biaya
-              const tiketCost = p.tiket.reduce((acc: number, t: any) => {
-                return acc + t.harga;
-              }, 0);
-
-              const sewaanCost = p.sewaan.reduce((acc: number, s: any) => {
-                return acc + s.hargaSewa;
-              }, 0);
-
+            {filteredPeserta.map((p) => {
+              const tiketCost = p.tiket.reduce((acc: number, t: any) => acc + t.harga, 0);
+              const sewaanCost = p.sewaan.reduce((acc: number, s: any) => acc + s.hargaSewa, 0);
               const totalCost = tiketCost + sewaanCost;
 
               return (
@@ -203,35 +243,27 @@ export function ManagePeserta() {
                       {p.name}
                     </button>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {p.tiket.map((t: any) => (
                       <Badge
                         key={t.id}
                         variant="secondary"
-                        className="mr-1"
+                        className="mr-1 mb-1"
                       >
                         {t.tipe}
                       </Badge>
                     ))}
                   </TableCell>
                   <TableCell>
-                    {p.status.length > 0 ? (
-                      <div className="space-y-1">
-                        {p.status.map((s: any) => (
-                          <Badge
-                            key={s.id}
-                            variant={s.nilai ? "success" : "destructive"}
-                            className="mr-1"
-                          >
-                            {s.nama}
-                          </Badge>
-                        ))}
-                      </div>
+                    {p.bus ? (
+                      <Badge variant="outline">
+                        {p.bus.namaBus}
+                      </Badge>
                     ) : (
                       <span className="text-gray-500">-</span>
                     )}
                   </TableCell>
-                  <TableCell>{formatWon(totalCost)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatWon(totalCost)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button

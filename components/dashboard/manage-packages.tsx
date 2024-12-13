@@ -45,7 +45,8 @@ export function ManagePackages() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [newFeature, setNewFeature] = useState("")
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
   useEffect(() => {
     loadPackageData()
@@ -87,7 +88,8 @@ export function ManagePackages() {
         setIsEditing(false)
         setSelectedPackageId(null)
         setEditForm(initialForm)
-        setDialogOpen(false)
+        setAddDialogOpen(false)
+        setEditDialogOpen(false)
       } else {
         setError(result.message)
       }
@@ -153,14 +155,15 @@ export function ManagePackages() {
         </Alert>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Dialog untuk Tambah Paket Baru */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogTrigger asChild>
           <Button 
             onClick={() => {
               setIsEditing(false)
               setSelectedPackageId(null)
               setEditForm(initialForm)
-              setDialogOpen(true)
+              setAddDialogOpen(true)
             }}
           >
             Tambah Paket Baru
@@ -168,24 +171,22 @@ export function ManagePackages() {
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{isEditing ? "Edit Paket" : "Tambah Paket Baru"}</DialogTitle>
+            <DialogTitle>Tambah Paket Baru</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isEditing && (
-              <div className="space-y-2">
-                <Label>Tipe Paket</Label>
-                <Input
-                  value={editForm.tipe}
-                  onChange={(e) => setEditForm({
-                    ...editForm,
-                    tipe: e.target.value
-                  })}
-                  required
-                  disabled={isLoading}
-                  placeholder="Contoh: REGULAR"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Tipe Paket</Label>
+              <Input
+                value={editForm.tipe}
+                onChange={(e) => setEditForm({
+                  ...editForm,
+                  tipe: e.target.value
+                })}
+                required
+                disabled={isLoading}
+                placeholder="Contoh: REGULAR"
+              />
+            </div>
 
             <div className="space-y-2">
               <Label>Harga</Label>
@@ -257,7 +258,7 @@ export function ManagePackages() {
                 type="submit"
                 disabled={isLoading}
               >
-                {isLoading ? "Menyimpan..." : (isEditing ? "Simpan Perubahan" : "Tambah Paket")}
+                {isLoading ? "Menyimpan..." : "Tambah Paket"}
               </Button>
               <Button 
                 type="button" 
@@ -266,7 +267,7 @@ export function ManagePackages() {
                   setIsEditing(false)
                   setSelectedPackageId(null)
                   setEditForm(initialForm)
-                  setDialogOpen(false)
+                  setAddDialogOpen(false)
                 }}
                 disabled={isLoading}
               >
@@ -307,7 +308,8 @@ export function ManagePackages() {
                 </div>
 
                 <div className="flex space-x-2">
-                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  {/* Dialog untuk Edit Paket */}
+                  <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 
                         variant="outline"
@@ -320,7 +322,7 @@ export function ManagePackages() {
                           })
                           setSelectedPackageId(pkg.id)
                           setIsEditing(true)
-                          setDialogOpen(true)
+                          setEditDialogOpen(true)
                         }}
                       >
                         Edit
@@ -410,7 +412,7 @@ export function ManagePackages() {
                               setIsEditing(false)
                               setSelectedPackageId(null)
                               setEditForm(initialForm)
-                              setDialogOpen(false)
+                              setEditDialogOpen(false)
                             }}
                             disabled={isLoading}
                           >

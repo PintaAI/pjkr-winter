@@ -7,38 +7,36 @@ import { ManageStatus } from "@/components/dashboard/manage-status"
 import { ManagePeserta } from "@/components/dashboard/manage-peserta"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Users, Package, Bus, Wrench, CheckSquare } from "lucide-react"
+import { Users, Package, Bus, CheckSquare } from "lucide-react"
 
 export default function DashboardPage() {
   return (
-    <div className="max-w-[1200px] mx-auto px-4 py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dashboard Panitia</h1>
-        <div className="flex items-center gap-4">
-          <Button asChild>
-            <Link href="/scan">Scan QR Code</Link>
+    <div className="max-w-[1200px] mx-auto px-3 sm:px-4 py-6 sm:py-10">
+      {/* Responsive header layout */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-6 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Dashboard Panitia</h1>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Button asChild className="flex-1 sm:flex-none">
+            <Link href="/scan" className="text-sm sm:text-base">Scan QR Code</Link>
           </Button>
           <LogoutButton />
         </div>
       </div>
 
       <Tabs defaultValue="peserta" className="space-y-6">
-        <TabsList className="grid grid-cols-5 gap-4">
+        {/* Keeping original tab structure */}
+        <TabsList className="grid grid-cols-4 gap-4">
           <TabsTrigger value="peserta" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden md:inline">Daftar Peserta</span>
           </TabsTrigger>
           <TabsTrigger value="packages" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            <span className="hidden md:inline">Kelola Paket</span>
+            <span className="hidden md:inline">Kelola Paket & Peralatan</span>
           </TabsTrigger>
           <TabsTrigger value="buses" className="flex items-center gap-2">
             <Bus className="h-4 w-4" />
             <span className="hidden md:inline">Kelola Bus</span>
-          </TabsTrigger>
-          <TabsTrigger value="rentals" className="flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            <span className="hidden md:inline">Kelola Peralatan</span>
           </TabsTrigger>
           <TabsTrigger value="status" className="flex items-center gap-2">
             <CheckSquare className="h-4 w-4" />
@@ -51,15 +49,20 @@ export default function DashboardPage() {
         </TabsContent>
 
         <TabsContent value="packages">
-          <ManagePackages />
+          <div className="space-y-6 sm:space-y-8">
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Paket Acara</h2>
+              <ManagePackages />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Paket Sewa Peralatan</h2>
+              <ManageRentals />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="buses">
           <ManageBuses />
-        </TabsContent>
-
-        <TabsContent value="rentals">
-          <ManageRentals />
         </TabsContent>
 
         <TabsContent value="status">

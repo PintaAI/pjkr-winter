@@ -11,7 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatWon } from '@/lib/utils'
-import { cn } from '@/lib/utils' // misal punya util classNames helper
+import { cn } from '@/lib/utils'
+import { Badge } from "@/components/ui/badge"
 
 // Simple spinner component
 function Spinner() {
@@ -92,15 +93,12 @@ export default function EventRegistrationForm() {
 
   const validate = () => {
     const newErrors: {[key: string]: string} = {}
-    // Contoh validasi simple email
     if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       newErrors.email = 'Format email ga valid, bro!'
     }
-    // Validasi simple phone (harus angka minimal 8 karakter)
     if (!formData.phone.match(/^[0-9]{8,}$/)) {
       newErrors.phone = 'Nomor telepon minimal 8 digit angka!'
     }
-    // Pastikan semua field diisi
     if (!formData.name.trim()) newErrors.name = 'Nama wajib diisi ya!'
     if (!formData.address.trim()) newErrors.address = 'Alamat jangan kosong dong!'
 
@@ -132,16 +130,15 @@ export default function EventRegistrationForm() {
   }
 
   const handleRentalChange = (id: string, checked: boolean) => {
-    if (checked) {
-      if (!formData.rentals.includes(id)) {
-        setFormData({...formData, rentals: [...formData.rentals, id]})
+    setFormData(prev => {
+      if (checked && !prev.rentals.includes(id)) {
+        return {...prev, rentals: [...prev.rentals, id]}
       }
-    } else {
-      setFormData({
-        ...formData,
-        rentals: formData.rentals.filter(rentalId => rentalId !== id)
-      })
-    }
+      if (!checked) {
+        return {...prev, rentals: prev.rentals.filter(rentalId => rentalId !== id)}
+      }
+      return prev
+    })
   }
 
   // Hitung total (ticket + rentals)
@@ -152,15 +149,13 @@ export default function EventRegistrationForm() {
   const totalHarga = totalTicket + totalRentals
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto py-8">
-
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-7xl mx-auto py-4 sm:py-8 px-4">
       {/* Progress Step Indicators */}
       <div className="flex items-center mb-4 gap-2">
         <div className="flex-1 h-2 bg-gray-200 rounded-full relative">
-          {/* Simple progress bar indikasi semua step (cuma visual aja) */}
           <div className="absolute h-2 bg-blue-500 rounded-full" style={{width: "100%"}}></div>
         </div>
-        <span className="text-sm text-gray-600">Step: Isi Data → Pilih Tiket → Pilih Bus → Rental → Summary</span>
+        <span className="hidden sm:inline text-sm text-gray-600">Step: Isi Data → Pilih Tiket → Pilih Bus → Rental → Summary</span>
       </div>
 
       {error && (
@@ -170,18 +165,18 @@ export default function EventRegistrationForm() {
       )}
 
       {/* Data Peserta */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Data Peserta</CardTitle>
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg sm:text-xl">Data Peserta</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nama Lengkap</Label>
             <Input
               id="name"
-              placeholder="Masukkan nama lengkap lo..."
+              placeholder="Masukkan nama lengkap mu..."
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
               required
               disabled={isLoading}
             />
@@ -195,7 +190,7 @@ export default function EventRegistrationForm() {
               id="email"
               placeholder="contoh: lu@ex.com"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
               required
               disabled={isLoading}
             />
@@ -209,7 +204,7 @@ export default function EventRegistrationForm() {
               id="phone"
               placeholder="cth: 08123456789"
               value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
               required
               disabled={isLoading}
             />
@@ -222,7 +217,7 @@ export default function EventRegistrationForm() {
               id="address"
               placeholder="Jalan, Kota, Kodepos..."
               value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
               required
               disabled={isLoading}
             />
@@ -233,37 +228,35 @@ export default function EventRegistrationForm() {
 
       {/* Pilihan Tiket */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Pilihan Tiket</h2>
-        <p className="text-sm text-gray-500 mb-2">Pilih tipe tiket yang cocok buat lo</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="text-lg sm:text-xl font-semibold">Pilihan Tiket</h2>
+        <p className="text-sm text-gray-500">Pilih tipe tiket yang cocok buat mu</p>
+        <div className="flex flex-col lg:flex-row gap-4">
           {ticketData.map((ticket) => {
             const isSelected = formData.ticketType === ticket.tipe
             return (
               <Card 
                 key={ticket.tipe}
                 className={cn(
-                  "cursor-pointer transition-all p-4",
-                  isSelected ? 'border-2 border-blue-500' : 'hover:border-blue-200'
+                  "cursor-pointer transition-all flex-1",
+                  isSelected ? 'border-2 border-primary ring-2 ring-primary/20' : 'hover:border-primary/20'
                 )}
-                onClick={() => setFormData({...formData, ticketType: ticket.tipe})}
+                onClick={() => setFormData(prev => ({...prev, ticketType: ticket.tipe}))}
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {ticket.tipe} {isSelected && <span className="text-green-500 text-xl">✔</span>}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatWon(ticket.harga)}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-base">{ticket.tipe}</h3>
+                    <Badge variant="secondary" className="font-semibold">
+                      {formatWon(ticket.harga)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
                     {ticket.description}
                   </p>
-                  <ul className="mt-4 space-y-2">
+                  <ul className="space-y-1.5">
                     {ticket.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <span className="text-green-500">✓</span>
-                        <span className="text-sm">{feature}</span>
+                      <li key={index} className="text-sm flex items-center gap-2">
+                        <span className="text-primary">•</span>
+                        {feature}
                       </li>
                     ))}
                   </ul>
@@ -276,9 +269,9 @@ export default function EventRegistrationForm() {
 
       {/* Pilihan Bus */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Pilihan Bus</h2>
-        <p className="text-sm text-gray-500 mb-2">Pilih bus yang masih tersedia bangkunya</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <h2 className="text-lg sm:text-xl font-semibold">Pilihan Bus</h2>
+        <p className="text-sm text-gray-500">Pilih bus yang masih tersedia bangkunya</p>
+        <div className="flex flex-col lg:flex-row gap-4">
           {busData.map((bus) => {
             const isFull = bus.terisi >= bus.kapasitas
             const isSelected = formData.busId === bus.id
@@ -287,27 +280,39 @@ export default function EventRegistrationForm() {
               <Card 
                 key={bus.id}
                 className={cn(
-                  "cursor-pointer transition-all p-4",
-                  isSelected ? 'border-2 border-blue-500' 
+                  "cursor-pointer transition-all flex-1",
+                  isSelected ? 'border-2 border-primary ring-2 ring-primary/20' 
                     : isFull ? 'opacity-50 cursor-not-allowed' 
-                    : 'hover:border-blue-200'
+                    : 'hover:border-primary/20'
                 )}
                 onClick={() => {
                   if (!isFull) {
-                    setFormData({...formData, busId: bus.id})
+                    setFormData(prev => ({...prev, busId: bus.id}))
                   }
                 }}
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {bus.namaBus} {isSelected && <span className="text-green-500 text-xl">✔</span>}
-                    {isFull && <span className="text-red-500 text-sm"> (Penuh)</span>}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Kapasitas: {bus.terisi}/{bus.kapasitas}
-                  </p>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-base">{bus.namaBus}</h3>
+                    {isFull && (
+                      <Badge variant="destructive">Penuh</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Kapasitas:</span>
+                    <div className="flex-1 h-2.5 bg-gray-200 rounded-full">
+                      <div 
+                        className={cn(
+                          "h-2.5 rounded-full",
+                          isFull ? "bg-red-500" : "bg-green-500"
+                        )}
+                        style={{
+                          width: `${(bus.terisi / bus.kapasitas) * 100}%`
+                        }}
+                      />
+                    </div>
+                    <span>{bus.terisi}/{bus.kapasitas}</span>
+                  </div>
                 </CardContent>
               </Card>
             )
@@ -316,67 +321,85 @@ export default function EventRegistrationForm() {
       </div>
 
       {/* Sewa Peralatan */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sewa Peralatan</CardTitle>
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+            <span>Sewa Peralatan</span>
+            <Badge variant="secondary" className="text-xs">Opsional</Badge>
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <p className="text-sm text-gray-500">Pilih peralatan tambahan yang mau lo sewa (opsional)</p>
-          {rentalData.map((rental) => (
-            <div key={rental.id} className="flex items-start space-x-2">
-              <Checkbox
-                id={rental.id}
-                checked={formData.rentals.includes(rental.id)}
-                onCheckedChange={(checked) => 
-                  handleRentalChange(rental.id, checked as boolean)
-                }
-              />
-              <div className="leading-none">
-                <Label htmlFor={rental.id}>
-                  {rental.namaBarang}
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  {formatWon(rental.hargaSewa)}
-                </p>
-                <ul className="mt-2 space-y-1">
-                  {rental.items.map((item, index) => (
-                    <li key={index} className="text-sm text-muted-foreground">
-                      • {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
+        <CardContent>
+          <p className="text-sm text-gray-500 mb-4">Pilih peralatan yang lo butuhin buat petualangan mu</p>
+          
+          <div className="flex flex-col lg:flex-row gap-4">
+            {rentalData.map((rental) => {
+              const isSelected = formData.rentals.includes(rental.id)
+              return (
+                <Card
+                  key={rental.id}
+                  className={cn(
+                    "transition-all flex-1",
+                    isSelected ? 'border-2 border-primary ring-2 ring-primary/20' : 'hover:border-primary/20'
+                  )}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={isSelected}
+                        className="mt-1 h-5 w-5"
+                        onCheckedChange={(checked) => handleRentalChange(rental.id, checked as boolean)}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-base truncate">{rental.namaBarang}</h3>
+                          <Badge variant="secondary" className="ml-2 shrink-0">
+                            {formatWon(rental.hargaSewa)}
+                          </Badge>
+                        </div>
+                        <ul className="space-y-1.5">
+                          {rental.items.map((item, index) => (
+                            <li key={index} className="text-sm text-muted-foreground flex items-center gap-2">
+                              <span className="text-primary shrink-0">•</span>
+                              <span className="break-words">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
         </CardContent>
       </Card>
 
       {/* Summary Pilihan */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ringkasan Pilihan</CardTitle>
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg sm:text-xl">Ringkasan Pilihan</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between">
+        <CardContent className="space-y-3">
+          <div className="flex justify-between items-center">
             <span className="font-medium">Tiket:</span>
-            <span>{selectedTicket ? selectedTicket.tipe : '-'}</span>
+            <span className="text-right">{selectedTicket ? selectedTicket.tipe : '-'}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="font-medium">Bus:</span>
-            <span>
+            <span className="text-right">
               {formData.busId 
                 ? (busData.find(b => b.id === formData.busId)?.namaBus || '-') 
                 : '-'}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-start">
             <span className="font-medium">Peralatan:</span>
-            <span>
+            <span className="text-right flex-1 ml-4">
               {selectedRentals.length > 0 ? selectedRentals.map(r => r.namaBarang).join(', ') : '-'}
             </span>
           </div>
-          <hr />
-          <div className="flex justify-between text-lg font-bold">
+          <hr className="my-2" />
+          <div className="flex justify-between items-center text-lg font-bold">
             <span>Total:</span>
             <span>{formatWon(totalHarga)}</span>
           </div>
@@ -385,7 +408,7 @@ export default function EventRegistrationForm() {
 
       <Button
         type="submit"
-        className="w-full flex items-center justify-center"
+        className="w-full h-12 sm:h-11 text-base sm:text-sm flex items-center justify-center"
         disabled={isLoading}
       >
         {isLoading && <Spinner />}
