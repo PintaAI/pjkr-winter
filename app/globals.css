@@ -2,8 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Winter City';
+  src: url('/fonts/winter-city.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Chalk';
+  src: url('/fonts/chalk.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+
 body {
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: 'Chalk', system-ui, sans-serif;
+}
+
+.winter-font {
+  font-family: 'Winter City', 'Chalk', system-ui, sans-serif;
 }
 
 @layer base {

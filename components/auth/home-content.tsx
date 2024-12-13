@@ -22,7 +22,7 @@ export const HomeContent = () => {
               priority
             />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold">
+          <h1 className="text-4xl md:text-5xl font-bold winter-font">
             PJKR Winter Event 2024
           </h1>
           <p className="text-lg text-muted-background">
