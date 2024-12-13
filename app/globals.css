@@ -2,16 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Winter Sonata';
-  src: url('/fonts/Winter Sonata.ttf') format('truetype'),
-       url('/fonts/Winter Sonata.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
 body {
-  font-family: 'Winter Sonata', cursive;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 @layer base {
