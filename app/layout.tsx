@@ -19,6 +19,23 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "PJKR Winter",
   description: "PJKR Winter Event Registration",
+  manifest: "/manifest.json",
+  themeColor: "#000000",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PJKR Winter",
+  },
+  icons: {
+    apple: [
+      { url: "/logo.png", sizes: "192x192" }
+    ]
+  }
 };
 
 export default function RootLayout({
@@ -38,7 +55,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider>
-            <div >
+            <div>
               {children}
               <Toaster position="top-center" />
             </div>
