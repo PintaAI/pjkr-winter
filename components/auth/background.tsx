@@ -6,22 +6,31 @@ export const Background = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
 
   useEffect(() => {
+    let rAF: number | undefined;
+
     const handleScroll = () => {
-      setScrollPosition(window.scrollY);
+      if (rAF) cancelAnimationFrame(rAF);
+      rAF = requestAnimationFrame(() => {
+        setScrollPosition(window.scrollY);
+      });
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    return () => {
+      if (rAF) cancelAnimationFrame(rAF);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   return (
     <div className="fixed inset-0 -z-10 h-screen overflow-hidden">
-      {/* Layer 5 - Background (paling belakang) - Paling lambat */}
-      <div 
+      {/* Layer 5 */}
+      <div
         className="absolute inset-0 h-screen"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.1}px)`,
-          transition: 'transform 0.1s ease-out'
+          willChange: 'transform' 
         }}
       >
         <Image
@@ -35,12 +44,12 @@ export const Background = () => {
         />
       </div>
 
-      {/* Layer 4 - Bergerak sedikit lebih cepat */}
-      <div 
+      {/* Layer 4 */}
+      <div
         className="absolute inset-0 h-screen"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.3}px)`,
-          transition: 'transform 0.1s ease-out'
+          willChange: 'transform'
         }}
       >
         <Image
@@ -54,12 +63,12 @@ export const Background = () => {
         />
       </div>
 
-      {/* Layer 3 - Kecepatan menengah */}
-      <div 
+      {/* Layer 3 */}
+      <div
         className="absolute inset-0 h-screen"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.5}px)`,
-          transition: 'transform 0.1s ease-out'
+          willChange: 'transform'
         }}
       >
         <Image
@@ -73,12 +82,12 @@ export const Background = () => {
         />
       </div>
 
-      {/* Layer 2 - Lebih cepat */}
-      <div 
+      {/* Layer 2 */}
+      <div
         className="absolute inset-0 h-screen"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.7}px)`,
-          transition: 'transform 0.1s ease-out'
+          willChange: 'transform'
         }}
       >
         <Image
@@ -92,12 +101,12 @@ export const Background = () => {
         />
       </div>
 
-      {/* Layer 1 - Foreground (paling depan) - Paling cepat */}
-      <div 
+      {/* Layer 1 */}
+      <div
         className="absolute inset-0 h-screen"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.9}px)`,
-          transition: 'transform 0.1s ease-out'
+          willChange: 'transform'
         }}
       >
         <Image
