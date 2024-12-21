@@ -2,33 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Winter City';
-  src: url('/fonts/winter-city.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
+@layer base {
+  .font-montserrat {
+    font-family: var(--font-montserrat), system-ui, sans-serif;
+  }
+  
+  .bigfont {
+    font-family: var(--font-sinoff), system-ui, sans-serif;
+  }
 }
-
-@font-face {
-  font-family: 'Chalk';
-  src: url('/fonts/chalk.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-
 
 body {
-  font-family: 'Chalk', system-ui, sans-serif;
-}
-
-.winter-font {
-  font-family: 'Winter City', 'Chalk', system-ui, sans-serif;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 96%;        /* #f5f5f5 - bone white */
     --foreground: 217 36% 26%;
     --card: 0 0% 100%;
     --card-foreground: 217 36% 26%;
@@ -36,12 +26,12 @@ body {
     --popover-foreground: 217 36% 26%;
     --primary: 217 36% 26%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 39 100% 50%;
-    --secondary-foreground: 217 36% 26%;
+    --secondary: 184 56% 44%;      /* #31aab2 */
+    --secondary-foreground: 0 0% 100%;
     --muted: 217 36% 95%;
     --muted-foreground: 217 36% 40%;
-    --accent: 180 47% 48%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 100% 54%;        /* #ffc716 */
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 217 36% 89.8%;
@@ -53,9 +43,21 @@ body {
     --chart-4: 217 36% 40%;
     --chart-5: 180 47% 60%;
     --radius: 0.5rem;
+
+    /* Teal Color Palette */
+    --teal-50: 201 74% 11%;    /* #052033 */
+    --teal-100: 201 57% 16%;   /* #0E3345 */
+    --teal-200: 196 51% 21%;   /* #174656 */
+    --teal-300: 196 47% 26%;   /* #205868 */
+    --teal-400: 196 43% 31%;   /* #296B79 */
+    --teal-500: 196 45% 37%;   /* #337E8B */
+    --teal-600: 190 45% 42%;   /* #3C919C */
+    --teal-700: 187 45% 48%;   /* #45A3AE */
+    --teal-800: 184 45% 53%;   /* #4EB6BF */
+    --teal-900: 181 45% 58%;   /* #57C9D1 */
   }
   .dark {
-    --background: 217 36% 10%;
+    --background: 201 74% 11%;    /* teal-50: #052033 */
     --foreground: 0 0% 98%;
     --card: 217 36% 15%;
     --card-foreground: 0 0% 98%;
@@ -63,12 +65,12 @@ body {
     --popover-foreground: 0 0% 98%;
     --primary: 217 36% 26%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 39 100% 50%;
-    --secondary-foreground: 217 36% 26%;
+    --secondary: 184 56% 44%;      /* #31aab2 */
+    --secondary-foreground: 0 0% 100%;
     --muted: 217 36% 20%;
     --muted-foreground: 217 36% 70%;
-    --accent: 180 47% 48%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 100% 54%;        /* #ffc716 */
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 217 36% 26%;
@@ -79,6 +81,18 @@ body {
     --chart-3: 39 100% 50%;
     --chart-4: 217 36% 70%;
     --chart-5: 180 47% 60%;
+
+    /* Teal Color Palette - Dark Mode */
+    --teal-50: 201 74% 11%;    /* #052033 */
+    --teal-100: 201 57% 16%;   /* #0E3345 */
+    --teal-200: 196 51% 21%;   /* #174656 */
+    --teal-300: 196 47% 26%;   /* #205868 */
+    --teal-400: 196 43% 31%;   /* #296B79 */
+    --teal-500: 196 45% 37%;   /* #337E8B */
+    --teal-600: 190 45% 42%;   /* #3C919C */
+    --teal-700: 187 45% 48%;   /* #45A3AE */
+    --teal-800: 184 45% 53%;   /* #4EB6BF */
+    --teal-900: 181 45% 58%;   /* #57C9D1 */
   }
 }
 

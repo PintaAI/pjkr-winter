@@ -6,32 +6,31 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const montserrat = localFont({
+  src: '../public/fonts/Montserrat-Regular.ttf',
+  variable: "--font-montserrat",
   preload: true,
   display: 'swap'
 });
 
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+const sinoff = localFont({
+  src: '../public/fonts/sinoff.otf',
+  variable: "--font-sinoff",
   preload: true,
   display: 'swap'
 });
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "PJKR Winter",
   description: "PJKR Winter Event Registration",
   manifest: "/manifest.json",
   themeColor: "#000000",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -51,11 +50,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${montserrat.variable} ${sinoff.variable} font-montserrat antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
           disableTransitionOnChange
         >
           <SessionProvider>

@@ -9,7 +9,38 @@ export default {
   ],
   theme: {
     extend: {
+      animation: {
+        "fade-in": "fade-in 0.5s ease-out",
+        "fade-down": "fade-down 0.5s ease-out",
+        "fade-up": "fade-up 0.5s ease-out",
+      },
+      keyframes: {
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "fade-down": {
+          "0%": { opacity: "0", transform: "translateY(-10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+      },
       colors: {
+        teal: {
+          '50': '#052033',
+          '100': '#0E3345',
+          '200': '#174656',
+          '300': '#205868',
+          '400': '#296B79',
+          '500': '#337E8B',
+          '600': '#3C919C',
+          '700': '#45A3AE',
+          '800': '#4EB6BF',
+          '900': '#57C9D1'
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

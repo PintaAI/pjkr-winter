@@ -1,3 +1,4 @@
+
 import EventRegistrationForm from '@/components/event/event-registration-form'
 
 export default function EventRegistrationPage() {

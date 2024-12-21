@@ -189,12 +189,12 @@ export async function registerEvent(data: EventRegistrationData) {
         keterangan: "Menunggu konfirmasi pembayaran"
       },
       {
-        nama: "Absensi Keberangkatan",
+        nama: "Keberangkatan",
         nilai: false,
         keterangan: "Belum absen keberangkatan"
       },
       {
-        nama: "Absensi Kepulangan",
+        nama: "Kepulangan",
         nilai: false,
         keterangan: "Belum absen kepulangan"
       }

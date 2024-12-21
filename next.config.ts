@@ -7,6 +7,19 @@ const nextConfig: NextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    turbo: {
+      resolveExtensions: [
+        '.tsx',
+        '.ts',
+        '.jsx',
+        '.js',
+        '.mjs',
+        '.json',
+      ],
+      moduleIdStrategy: 'deterministic',
+    },
+  },
 };
 
 const config = withPWA({
