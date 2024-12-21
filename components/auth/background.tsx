@@ -24,10 +24,10 @@ export const Background = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 h-screen overflow-hidden">
+    <div className="fixed inset-0 -z-10 w-screen h-screen overflow-hidden">
       {/* Layer 5 */}
       <div
-        className="absolute inset-0 h-screen"
+        className="absolute inset-0 w-full h-full"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.1}px)`,
           willChange: 'transform' 
@@ -46,7 +46,7 @@ export const Background = () => {
 
       {/* Layer 4 */}
       <div
-        className="absolute inset-0 h-screen"
+        className="absolute inset-0 w-full h-full"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.3}px)`,
           willChange: 'transform'
@@ -65,7 +65,7 @@ export const Background = () => {
 
       {/* Layer 3 */}
       <div
-        className="absolute inset-0 h-screen"
+        className="absolute inset-0 w-full h-full"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.5}px)`,
           willChange: 'transform'
@@ -84,7 +84,7 @@ export const Background = () => {
 
       {/* Layer 2 */}
       <div
-        className="absolute inset-0 h-screen"
+        className="absolute inset-0 w-full h-full"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.7}px)`,
           willChange: 'transform'
@@ -103,7 +103,7 @@ export const Background = () => {
 
       {/* Layer 1 */}
       <div
-        className="absolute inset-0 h-screen"
+        className="absolute inset-0 w-full h-full"
         style={{ 
           transform: `translateY(${-scrollPosition * 0.9}px)`,
           willChange: 'transform'
