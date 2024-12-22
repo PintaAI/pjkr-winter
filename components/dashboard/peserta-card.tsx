@@ -66,6 +66,8 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
           <p>Email: {peserta.email}</p>
           <p>Telepon: {peserta.telepon || "-"}</p>
           <p>Alamat: {peserta.alamat || "-"}</p>
+          <p>Ukuran Baju: {peserta.ukuranBaju || "-"}</p>
+          <p>Ukuran Sepatu: {peserta.ukuranSepatu || "-"}</p>
         </div>
 
         {peserta.bus && (

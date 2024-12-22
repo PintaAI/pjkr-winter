@@ -33,6 +33,8 @@ model User {
   updatedAt             DateTime  @updatedAt
   alamat                String?
   telepon               String?
+  ukuranBaju            String?   // Ukuran pakaian (S/M/L/XL/XXL atau custom)
+  ukuranSepatu          String?   // Ukuran sepatu (250-275 atau custom)
   
   // Relasi yang sudah ada
   accounts Account[]

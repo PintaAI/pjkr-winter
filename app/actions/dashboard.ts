@@ -29,6 +29,8 @@ export async function getPesertaData() {
         plan: p.plan,
         alamat: p.alamat,
         telepon: p.telepon,
+        ukuranBaju: p.ukuranBaju,
+        ukuranSepatu: p.ukuranSepatu,
         tiket: p.tiket,
         sewaan: p.sewaan,
         bus: p.bus,
@@ -48,6 +50,8 @@ export async function updatePeserta(id: string, data: {
   alamat?: string
   telepon?: string
   busId?: string | null
+  ukuranBaju?: string
+  ukuranSepatu?: string
 }) {
   try {
     await db.user.update({

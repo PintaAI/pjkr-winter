@@ -26,25 +26,49 @@ function Spinner() {
   )
 }
 
-interface FormData {
+interface PesertaData {
   name: string
   email: string
   phone: string
   address: string
+  ukuranBaju: string
+  ukuranSepatu: string
+}
+
+interface FormData {
+  peserta: PesertaData[]
   ticketType: string
   rentals: string[]
   busId: string | ""
 }
 
-const initialFormData: FormData = {
+const initialPesertaData: PesertaData = {
   name: "",
   email: "",
   phone: "",
   address: "",
+  ukuranBaju: "",
+  ukuranSepatu: ""
+}
+
+const initialFormData: FormData = {
+  peserta: [{ ...initialPesertaData }],
   ticketType: "REGULAR",
   rentals: [],
   busId: ""
 }
+
+const ukuranBajuOptions = [
+  { label: "S (90)", value: "S" },
+  { label: "M (95)", value: "M" },
+  { label: "L (100)", value: "L" },
+  { label: "XL (105)", value: "XL" },
+  { label: "XXL (110)", value: "XXL" }
+]
+
+const ukuranSepatuOptions = [
+  "250", "255", "260", "265", "270", "275"
+]
 
 interface BusData {
   id: string
@@ -93,17 +117,45 @@ export default function EventRegistrationForm() {
 
   const validate = () => {
     const newErrors: {[key: string]: string} = {}
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      newErrors.email = 'Format email ga valid, bro!'
-    }
-    if (!formData.phone.match(/^[0-9]{8,}$/)) {
-      newErrors.phone = 'Nomor telepon minimal 8 digit angka!'
-    }
-    if (!formData.name.trim()) newErrors.name = 'Nama wajib diisi ya!'
-    if (!formData.address.trim()) newErrors.address = 'Alamat jangan kosong dong!'
+    
+    formData.peserta.forEach((peserta, index) => {
+      if (!peserta.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        newErrors[`email_${index}`] = 'Format email ga valid, bro!'
+      }
+      if (!peserta.phone.match(/^[0-9]{8,}$/)) {
+        newErrors[`phone_${index}`] = 'Nomor telepon minimal 8 digit angka!'
+      }
+      if (!peserta.name.trim()) newErrors[`name_${index}`] = 'Nama wajib diisi ya!'
+      if (!peserta.address.trim()) newErrors[`address_${index}`] = 'Alamat jangan kosong dong!'
+      if (!peserta.ukuranBaju) newErrors[`ukuranBaju_${index}`] = 'Pilih ukuran baju!'
+      if (!peserta.ukuranSepatu) newErrors[`ukuranSepatu_${index}`] = 'Pilih ukuran sepatu!'
+    })
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  const handleAddPeserta = () => {
+    setFormData(prev => ({
+      ...prev,
+      peserta: [...prev.peserta, { ...initialPesertaData }]
+    }))
+  }
+
+  const handleRemovePeserta = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      peserta: prev.peserta.filter((_, i) => i !== index)
+    }))
+  }
+
+  const handlePesertaChange = (index: number, field: keyof PesertaData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      peserta: prev.peserta.map((p, i) => 
+        i === index ? { ...p, [field]: value } : p
+      )
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,12 +193,13 @@ export default function EventRegistrationForm() {
     })
   }
 
-  // Hitung total (ticket + rentals)
+  // Hitung total (ticket + rentals) untuk semua peserta
   const selectedTicket = ticketData.find(t => t.tipe === formData.ticketType)
-  const totalTicket = selectedTicket ? selectedTicket.harga : 0
+  const totalTicketPerPerson = selectedTicket ? selectedTicket.harga : 0
   const selectedRentals = rentalData.filter(r => formData.rentals.includes(r.id))
-  const totalRentals = selectedRentals.reduce((acc, r) => acc + r.hargaSewa, 0)
-  const totalHarga = totalTicket + totalRentals
+  const totalRentalsPerPerson = selectedRentals.reduce((acc, r) => acc + r.hargaSewa, 0)
+  const totalPerPerson = totalTicketPerPerson + totalRentalsPerPerson
+  const totalHarga = totalPerPerson * formData.peserta.length
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-7xl mx-auto py-4 sm:py-8 px-4">
@@ -165,66 +218,148 @@ export default function EventRegistrationForm() {
       )}
 
       {/* Data Peserta */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg sm:text-xl">Data Peserta</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nama Lengkap</Label>
-            <Input
-              id="name"
-              placeholder="Masukkan nama lengkap mu..."
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-              required
-              disabled={isLoading}
-            />
-            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
-          </div>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg sm:text-xl font-semibold">Data Peserta</h2>
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={handleAddPeserta}
+            disabled={isLoading}
+          >
+            + Tambah Peserta
+          </Button>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              placeholder="contoh: lu@ex.com"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
-              required
-              disabled={isLoading}
-            />
-            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-          </div>
+        {formData.peserta.map((peserta, index) => (
+          <Card key={index} className="shadow-sm">
+            <CardHeader className="pb-4">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg">Peserta {index + 1}</CardTitle>
+                {index > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => handleRemovePeserta(index)}
+                    disabled={isLoading}
+                  >
+                    Hapus
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor={`name_${index}`}>Nama Lengkap</Label>
+                <Input
+                  id={`name_${index}`}
+                  placeholder="Masukkan nama lengkap..."
+                  value={peserta.name}
+                  onChange={(e) => handlePesertaChange(index, 'name', e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+                {errors[`name_${index}`] && (
+                  <p className="text-sm text-red-500">{errors[`name_${index}`]}</p>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Nomor Telepon</Label>
-            <Input
-              type="tel"
-              id="phone"
-              placeholder="cth: 08123456789"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({...prev, phone: e.target.value}))}
-              required
-              disabled={isLoading}
-            />
-            {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor={`email_${index}`}>Email</Label>
+                <Input
+                  type="email"
+                  id={`email_${index}`}
+                  placeholder="contoh: peserta@ex.com"
+                  value={peserta.email}
+                  onChange={(e) => handlePesertaChange(index, 'email', e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+                {errors[`email_${index}`] && (
+                  <p className="text-sm text-red-500">{errors[`email_${index}`]}</p>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Alamat</Label>
-            <Textarea
-              id="address"
-              placeholder="Jalan, Kota, Kodepos..."
-              value={formData.address}
-              onChange={(e) => setFormData(prev => ({...prev, address: e.target.value}))}
-              required
-              disabled={isLoading}
-            />
-            {errors.address && <p className="text-sm text-red-500">{errors.address}</p>}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor={`phone_${index}`}>Nomor Telepon</Label>
+                <Input
+                  type="tel"
+                  id={`phone_${index}`}
+                  placeholder="cth: 08123456789"
+                  value={peserta.phone}
+                  onChange={(e) => handlePesertaChange(index, 'phone', e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+                {errors[`phone_${index}`] && (
+                  <p className="text-sm text-red-500">{errors[`phone_${index}`]}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`address_${index}`}>Alamat</Label>
+                <Textarea
+                  id={`address_${index}`}
+                  placeholder="Jalan, Kota, Kodepos..."
+                  value={peserta.address}
+                  onChange={(e) => handlePesertaChange(index, 'address', e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+                {errors[`address_${index}`] && (
+                  <p className="text-sm text-red-500">{errors[`address_${index}`]}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor={`ukuranBaju_${index}`}>Ukuran Baju</Label>
+                  <select
+                    id={`ukuranBaju_${index}`}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                    value={peserta.ukuranBaju}
+                    onChange={(e) => handlePesertaChange(index, 'ukuranBaju', e.target.value)}
+                    required
+                    disabled={isLoading}
+                  >
+                    <option value="">Pilih Ukuran</option>
+                    {ukuranBajuOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors[`ukuranBaju_${index}`] && (
+                    <p className="text-sm text-red-500">{errors[`ukuranBaju_${index}`]}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor={`ukuranSepatu_${index}`}>Ukuran Sepatu</Label>
+                  <select
+                    id={`ukuranSepatu_${index}`}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                    value={peserta.ukuranSepatu}
+                    onChange={(e) => handlePesertaChange(index, 'ukuranSepatu', e.target.value)}
+                    required
+                    disabled={isLoading}
+                  >
+                    <option value="">Pilih Ukuran</option>
+                    {ukuranSepatuOptions.map(size => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  {errors[`ukuranSepatu_${index}`] && (
+                    <p className="text-sm text-red-500">{errors[`ukuranSepatu_${index}`]}</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Pilihan Tiket */}
       <div className="space-y-4">
@@ -380,9 +515,17 @@ export default function EventRegistrationForm() {
           <CardTitle className="text-lg sm:text-xl">Ringkasan Pilihan</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="font-medium">Tiket:</span>
-            <span className="text-right">{selectedTicket ? selectedTicket.tipe : '-'}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Jumlah Peserta:</span>
+              <span className="text-right">{formData.peserta.length} orang</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Tiket:</span>
+              <span className="text-right">
+                {selectedTicket ? `${selectedTicket.tipe} (${formatWon(totalTicketPerPerson)}/orang)` : '-'}
+              </span>
+            </div>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-medium">Bus:</span>
@@ -394,14 +537,25 @@ export default function EventRegistrationForm() {
           </div>
           <div className="flex justify-between items-start">
             <span className="font-medium">Peralatan:</span>
-            <span className="text-right flex-1 ml-4">
-              {selectedRentals.length > 0 ? selectedRentals.map(r => r.namaBarang).join(', ') : '-'}
-            </span>
+            <div className="text-right flex-1 ml-4">
+              <div>{selectedRentals.length > 0 ? selectedRentals.map(r => r.namaBarang).join(', ') : '-'}</div>
+              {selectedRentals.length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {formatWon(totalRentalsPerPerson)}/orang
+                </div>
+              )}
+            </div>
           </div>
           <hr className="my-2" />
-          <div className="flex justify-between items-center text-lg font-bold">
-            <span>Total:</span>
-            <span>{formatWon(totalHarga)}</span>
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-sm">
+              <span>Total per orang:</span>
+              <span>{formatWon(totalPerPerson)}</span>
+            </div>
+            <div className="flex justify-between items-center text-lg font-bold">
+              <span>Total {formData.peserta.length} orang:</span>
+              <span>{formatWon(totalHarga)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>

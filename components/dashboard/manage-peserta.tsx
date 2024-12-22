@@ -49,6 +49,8 @@ interface PesertaForm {
   alamat: string
   telepon: string
   busId: string | null
+  ukuranBaju: string
+  ukuranSepatu: string
 }
 
 interface BusData {
@@ -287,7 +289,9 @@ export function ManagePeserta() {
                                 email: p.email,
                                 alamat: p.alamat || "",
                                 telepon: p.telepon || "",
-                                busId: p.bus?.id || null
+                                busId: p.bus?.id || null,
+                                ukuranBaju: p.ukuranBaju || "",
+                                ukuranSepatu: p.ukuranSepatu || ""
                               })
                               setSelectedPesertaId(p.id)
                               setDialogOpen(true)
@@ -349,6 +353,32 @@ export function ManagePeserta() {
                                   telepon: e.target.value
                                 }))}
                                 disabled={isLoading}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Ukuran Baju</Label>
+                              <Input
+                                value={editForm?.ukuranBaju || ""}
+                                onChange={(e) => setEditForm(prev => ({
+                                  ...prev!,
+                                  ukuranBaju: e.target.value
+                                }))}
+                                disabled={isLoading}
+                                placeholder="Contoh: S, M, L, XL, XXL"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Ukuran Sepatu</Label>
+                              <Input
+                                value={editForm?.ukuranSepatu || ""}
+                                onChange={(e) => setEditForm(prev => ({
+                                  ...prev!,
+                                  ukuranSepatu: e.target.value
+                                }))}
+                                disabled={isLoading}
+                                placeholder="Contoh: 40, 41, 42"
                               />
                             </div>
 
