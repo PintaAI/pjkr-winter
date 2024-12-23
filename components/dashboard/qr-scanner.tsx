@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { QrReader } from "react-qr-reader";
 import { toast } from "sonner";
 import { PesertaCard } from "./peserta-card";
 import { User, Bus, Ticket, StatusPeserta, OptionalItem } from "@prisma/client";
@@ -12,7 +11,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-} from "@/components/ui/drawer";
+} from "../ui/drawer";
 
 type PesertaWithRelations = User & {
   bus: Bus | null;
@@ -24,30 +23,26 @@ type PesertaWithRelations = User & {
 export function QRScanner() {
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastScanTime, setLastScanTime] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Debounced scan handler
-  const handleScan = useCallback(async (pesertaId: string) => {
-    const now = Date.now();
-    const timeSinceLastScan = now - lastScanTime;
-    
-    // Prevent scanning more often than every 2 seconds
-    if (timeSinceLastScan < 2000) {
+  const handleResult = async (result: any, error: any) => {
+    if (error) {
+      console.warn("Kesalahan pemindaian kode:", error);
       return;
     }
-    
-    // Validate QR code format first
-    if (!pesertaId.match(/^[a-zA-Z0-9_-]+$/)) {
+
+    if (!result?.text) return;
+
+    // Validate QR code format
+    if (!result.text.match(/^[a-zA-Z0-9_-]+$/)) {
       console.warn("Format QR code tidak valid");
       return;
     }
 
     try {
-      setLastScanTime(now);
       setIsLoading(true);
-
-      const response = await fetch(`/api/peserta/${pesertaId}`);
+      const response = await fetch(`/api/peserta/${result.text}`);
+      
       if (!response.ok) {
         throw new Error("Gagal mengambil data peserta");
       }
@@ -62,41 +57,24 @@ export function QRScanner() {
     } finally {
       setIsLoading(false);
     }
-  }, [lastScanTime]);
-
-  useEffect(() => {
-    const scanner = new Html5QrcodeScanner(
-      "reader",
-      {
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        fps: 5,
-      },
-      false
-    );
-
-    scanner.render(onScanSuccess, onScanError);
-
-    function onScanSuccess(decodedText: string) {
-      handleScan(decodedText);
-    }
-
-    function onScanError(error: unknown) {
-      console.warn("Kesalahan pemindaian kode:", error);
-    }
-
-    return () => {
-      scanner.clear().catch((error) => {
-        console.error("Kesalahan saat membersihkan scanner:", error);
-      });
-    };
-  }, [handleScan]);
+  };
 
   return (
     <div className="space-y-4">
-      <div id="reader" className="w-full max-w-sm mx-auto"></div>
+      <div className="w-full max-w-sm mx-auto">
+        <QrReader
+          constraints={{
+            facingMode: "environment"
+          }}
+          onResult={handleResult}
+          className="w-full aspect-square"
+          videoStyle={{ objectFit: "cover" }}
+          scanDelay={500}
+          ViewFinder={() => (
+            <div className="border-2 border-primary w-48 h-48 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          )}
+        />
+      </div>
 
       {isLoading && (
         <div className="flex items-center justify-center p-6">
@@ -105,7 +83,15 @@ export function QRScanner() {
         </div>
       )}
 
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <Drawer 
+        open={drawerOpen} 
+        onOpenChange={(open) => {
+          setDrawerOpen(open);
+          if (!open) {
+            setPeserta(null);
+          }
+        }}
+      >
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Data Peserta</DrawerTitle>
