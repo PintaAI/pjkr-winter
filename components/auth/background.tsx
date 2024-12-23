@@ -1,6 +1,7 @@
 "use client";
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import Snowfall from 'react-snowfall';
 
 export const Background = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -24,7 +25,7 @@ export const Background = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 w-screen h-screen overflow-hidden">
+    <div className="fixed inset-0 -z-1 w-screen h-screen overflow-hidden">
       {/* Layer 5 */}
       <div
         className="absolute inset-0 w-full h-full"
@@ -79,6 +80,28 @@ export const Background = () => {
           sizes="100vw"
           className="object-cover object-bottom"
           priority
+        />
+      </div>
+
+      {/* Snowfall Layer */}
+      <div 
+        className="absolute inset-0 w-full h-full"
+        style={{ 
+          transform: `translateY(${-scrollPosition * 0.6}px)`,
+          willChange: 'transform'
+        }}
+      >
+        <Snowfall
+          snowflakeCount={150}
+          radius={[0.5, 2.0]}
+          speed={[0.5, 2.0]}
+          wind={[-0.5, 1.0]}
+          color="#fff"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%'
+          }}
         />
       </div>
 

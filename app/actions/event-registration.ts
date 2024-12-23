@@ -4,7 +4,6 @@ import { db } from "@/lib/db"
 
 interface PesertaData {
   name: string
-  email: string
   phone: string
   address: string
   ukuranBaju: string
@@ -158,9 +157,9 @@ export async function registerEvent(data: EventRegistrationData) {
 
     // Proses setiap peserta
     for (const p of peserta) {
-      // Cek apakah email sudah terdaftar
-      let user = await db.user.findUnique({
-        where: { email: p.email }
+      // Cek apakah nomor telepon sudah terdaftar
+      let user = await db.user.findFirst({
+        where: { telepon: p.phone }
       })
 
       if (user) {
@@ -169,7 +168,6 @@ export async function registerEvent(data: EventRegistrationData) {
           where: { id: user.id },
           data: {
             name: p.name,
-            telepon: p.phone,
             alamat: p.address,
             ukuranBaju: p.ukuranBaju,
             ukuranSepatu: p.ukuranSepatu,
@@ -180,8 +178,10 @@ export async function registerEvent(data: EventRegistrationData) {
         // Buat user baru
         user = await db.user.create({
           data: {
-            email: p.email,
             name: p.name,
+            // Prisma mengharuskan field email didefinisikan meskipun optional di schema
+            // Menggunakan string kosong sebagai nilai default untuk memenuhi tipe UserCreateInput
+            email: "",
             telepon: p.phone,
             alamat: p.address,
             ukuranBaju: p.ukuranBaju,

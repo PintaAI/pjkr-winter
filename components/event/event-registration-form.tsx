@@ -10,8 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { formatWon } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { formatWon, cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 
 // Simple spinner component
@@ -28,7 +27,6 @@ function Spinner() {
 
 interface PesertaData {
   name: string
-  email: string
   phone: string
   address: string
   ukuranBaju: string
@@ -44,7 +42,6 @@ interface FormData {
 
 const initialPesertaData: PesertaData = {
   name: "",
-  email: "",
   phone: "",
   address: "",
   ukuranBaju: "",
@@ -119,9 +116,6 @@ export default function EventRegistrationForm() {
     const newErrors: {[key: string]: string} = {}
     
     formData.peserta.forEach((peserta, index) => {
-      if (!peserta.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-        newErrors[`email_${index}`] = 'Format email ga valid, bro!'
-      }
       if (!peserta.phone.match(/^[0-9]{8,}$/)) {
         newErrors[`phone_${index}`] = 'Nomor telepon minimal 8 digit angka!'
       }
@@ -263,22 +257,6 @@ export default function EventRegistrationForm() {
                 />
                 {errors[`name_${index}`] && (
                   <p className="text-sm text-red-500">{errors[`name_${index}`]}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor={`email_${index}`}>Email</Label>
-                <Input
-                  type="email"
-                  id={`email_${index}`}
-                  placeholder="contoh: peserta@ex.com"
-                  value={peserta.email}
-                  onChange={(e) => handlePesertaChange(index, 'email', e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-                {errors[`email_${index}`] && (
-                  <p className="text-sm text-red-500">{errors[`email_${index}`]}</p>
                 )}
               </div>
 

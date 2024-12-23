@@ -357,32 +357,6 @@ export function ManagePeserta() {
                             </div>
 
                             <div className="space-y-2">
-                              <Label>Ukuran Baju</Label>
-                              <Input
-                                value={editForm?.ukuranBaju || ""}
-                                onChange={(e) => setEditForm(prev => ({
-                                  ...prev!,
-                                  ukuranBaju: e.target.value
-                                }))}
-                                disabled={isLoading}
-                                placeholder="Contoh: S, M, L, XL, XXL"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Ukuran Sepatu</Label>
-                              <Input
-                                value={editForm?.ukuranSepatu || ""}
-                                onChange={(e) => setEditForm(prev => ({
-                                  ...prev!,
-                                  ukuranSepatu: e.target.value
-                                }))}
-                                disabled={isLoading}
-                                placeholder="Contoh: 40, 41, 42"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
                               <Label>Bus</Label>
                               <Select
                                 value={editForm?.busId || "no_bus"}

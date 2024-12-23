@@ -55,7 +55,7 @@ export function CTAContent() {
       </div>
       
       {/* Registration Button */}
-      <Link href="/auth/register" className="w-full max-w-md mx-auto px-4">
+      <Link href="/event-registration" className="w-full max-w-md mx-auto px-4">
         <Button className="w-full bg-[#15BFFD] hover:bg-[#15BFFD]/90 text-white text-xl py-6">
           DAFTAR EVENT WINTER SPORT
         </Button>
