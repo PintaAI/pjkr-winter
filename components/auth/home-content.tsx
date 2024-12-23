@@ -2,7 +2,7 @@ import { Background } from "./background";
 
 export const HeroContent = () => {
   return (
-    <div className="h-screen bg-gradient-to-b from-background to-secondary">
+    <div className="h-screen bg-gradient-to-b from-background via-secondary">
       <Background />
       <div className="container relative mx-auto px-4 pt-20 md:pt-16">
         <div className="text-center space-y-0 animate-fade-in">
@@ -26,17 +26,17 @@ export const HeroContent = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-10 md:bottom-24 left-0 right-0">
-        <div className="text-center max-w-xl mx-auto space-y-4 animate-fade-up">
+      <div className="absolute scale-90 bottom-5 md:bottom-22 left-0 right-0">
+        <div className="text-center max-w-xl mx-auto space-y-3 animate-fade-up">
           <h3 className="text-xl  md:text-3xl font-bold">
             Hai gais,
           </h3>
-          <p className="text-sm md:text-xl leading-relaxed">
+          <p className="text-sm scale-90 md:text-xl">
             Yuk gabung bareng kita seru-seruan
             <br />
             bermain ski dan snowboard saat musim dingin
             <br />
-            yang pasti dijamin berkesan dan ga bakal kamu lupain !
+            yang pasti dijamin berkesan dan ga bakal kamu lupain!
           </p>
         </div>
       </div>

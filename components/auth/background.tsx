@@ -92,7 +92,7 @@ export const Background = () => {
         }}
       >
         <Snowfall
-          snowflakeCount={150}
+          snowflakeCount={80}
           radius={[0.5, 2.0]}
           speed={[0.5, 2.0]}
           wind={[-0.5, 1.0]}
