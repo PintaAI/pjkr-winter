@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { registerEvent, getBusData, getTicketData, getRentalData } from '@/app/actions/event-registration'
+import { toast } from 'sonner'
+import { registerEvent, getBusData, getTicketData, getOptionalItemData } from '@/app/actions/event-registration'
 import { useRouter } from 'next/navigation'
 
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import PesertaForm, { PesertaData } from './peserta-form'
 import TicketForm, { TicketData } from './ticket-form'
 import BusForm, { BusData } from './bus-form'
-import RentalForm, { RentalData } from './rental-form'
+import OptionalItemForm, { OptionalItemData } from './optional-item-form'
 import SummaryForm from './summary-form'
 
 // Simple spinner component
@@ -27,7 +28,7 @@ function Spinner() {
 interface FormData {
   peserta: PesertaData[]
   ticketType: string
-  rentals: string[]
+  optionalItems: string[]
   busId: string | ""
 }
 
@@ -37,13 +38,14 @@ const initialPesertaData: PesertaData = {
   phone: "",
   address: "",
   ukuranBaju: "",
-  ukuranSepatu: ""
+  ukuranSepatu: "",
+  tipeAlat: ""
 }
 
 const initialFormData: FormData = {
   peserta: [{ ...initialPesertaData }],
   ticketType: "REGULAR",
-  rentals: [],
+  optionalItems: [],
   busId: ""
 }
 
@@ -53,7 +55,7 @@ export default function EventRegistrationForm() {
   const [error, setError] = useState<string | null>(null)
   const [busData, setBusData] = useState<BusData[]>([])
   const [ticketData, setTicketData] = useState<TicketData[]>([])
-  const [rentalData, setRentalData] = useState<RentalData[]>([])
+  const [optionalItemData, setOptionalItemData] = useState<OptionalItemData[]>([])
   const [errors, setErrors] = useState<{[key: string]: string}>({})
   const router = useRouter()
 
@@ -65,11 +67,17 @@ export default function EventRegistrationForm() {
       const ticketResult = await getTicketData()
       if (ticketResult.success) setTicketData(ticketResult.data ?? [])
 
-      const rentalResult = await getRentalData()
-      if (rentalResult.success) setRentalData(rentalResult.data ?? [])
+      const optionalItemResult = await getOptionalItemData()
+      if (optionalItemResult.success) setOptionalItemData(optionalItemResult.data ?? [])
     }
     loadData()
   }, [])
+
+  const validateEmail = (email: string, currentIndex: number) => {
+    return !formData.peserta.some(
+      (p, idx) => idx !== currentIndex && p.email === email
+    );
+  }
 
   const validate = () => {
     const newErrors: {[key: string]: string} = {}
@@ -77,6 +85,8 @@ export default function EventRegistrationForm() {
     formData.peserta.forEach((peserta, index) => {
       if (!peserta.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
         newErrors[`email_${index}`] = 'Format email tidak valid!'
+      } else if (!validateEmail(peserta.email, index)) {
+        newErrors[`email_${index}`] = 'Email sudah digunakan oleh peserta lain!'
       }
       if (!peserta.phone.match(/^[0-9]{8,}$/)) {
         newErrors[`phone_${index}`] = 'Nomor telepon minimal 8 digit angka!'
@@ -123,7 +133,7 @@ export default function EventRegistrationForm() {
     try {
       const result = await registerEvent(formData)
       if (result.success) {
-        alert('Pendaftaran berhasil!')
+        toast.success('Pendaftaran berhasil!')
         setFormData(initialFormData)
         router.refresh()
       } else {
@@ -137,24 +147,24 @@ export default function EventRegistrationForm() {
     }
   }
 
-  const handleRentalChange = (id: string, checked: boolean) => {
+  const handleOptionalItemChange = (id: string, checked: boolean) => {
     setFormData(prev => {
-      if (checked && !prev.rentals.includes(id)) {
-        return {...prev, rentals: [...prev.rentals, id]}
+      if (checked && !prev.optionalItems.includes(id)) {
+        return {...prev, optionalItems: [...prev.optionalItems, id]}
       }
       if (!checked) {
-        return {...prev, rentals: prev.rentals.filter(rentalId => rentalId !== id)}
+        return {...prev, optionalItems: prev.optionalItems.filter(itemId => itemId !== id)}
       }
       return prev
     })
   }
 
-  // Hitung total (ticket + rentals) untuk semua peserta
+  // Hitung total (ticket + optional items) untuk semua peserta
   const selectedTicket = ticketData.find(t => t.tipe === formData.ticketType)
   const totalTicketPerPerson = selectedTicket ? selectedTicket.harga : 0
-  const selectedRentals = rentalData.filter(r => formData.rentals.includes(r.id))
-  const totalRentalsPerPerson = selectedRentals.reduce((acc, r) => acc + r.hargaSewa, 0)
-  const totalPerPerson = totalTicketPerPerson + totalRentalsPerPerson
+  const selectedOptionalItems = optionalItemData.filter(item => formData.optionalItems.includes(item.id))
+  const totalOptionalItemsPerPerson = selectedOptionalItems.reduce((acc, item) => acc + item.harga, 0)
+  const totalPerPerson = totalTicketPerPerson + totalOptionalItemsPerPerson
   const totalHarga = totalPerPerson * formData.peserta.length
 
   return (
@@ -178,6 +188,7 @@ export default function EventRegistrationForm() {
         onAddPeserta={handleAddPeserta}
         onRemovePeserta={handleRemovePeserta}
         onPesertaChange={handlePesertaChange}
+        validateEmail={validateEmail}
       />
 
       <TicketForm
@@ -192,19 +203,19 @@ export default function EventRegistrationForm() {
         onBusSelect={(id) => setFormData(prev => ({...prev, busId: id}))}
       />
 
-      <RentalForm
-        rentalData={rentalData}
-        selectedIds={formData.rentals}
-        onRentalChange={handleRentalChange}
+      <OptionalItemForm
+        optionalItemData={optionalItemData}
+        selectedIds={formData.optionalItems}
+        onOptionalItemChange={handleOptionalItemChange}
       />
 
       <SummaryForm
         pesertaCount={formData.peserta.length}
         selectedTicket={selectedTicket}
         selectedBus={busData.find(b => b.id === formData.busId)}
-        selectedRentals={selectedRentals}
+        selectedOptionalItems={selectedOptionalItems}
         totalTicketPerPerson={totalTicketPerPerson}
-        totalRentalsPerPerson={totalRentalsPerPerson}
+        totalOptionalItemsPerPerson={totalOptionalItemsPerPerson}
         totalPerPerson={totalPerPerson}
         totalHarga={totalHarga}
       />

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Bus, Ticket, Rental, StatusPeserta, UserRole } from "@prisma/client";
+import { User, Bus, Ticket, OptionalItem, StatusPeserta, UserRole } from "@prisma/client";
 import { updateStatusPeserta } from "@/app/actions/dashboard";
 import { toast } from "sonner";
 import { Check, X } from "lucide-react";
@@ -12,7 +12,7 @@ import { Check, X } from "lucide-react";
 type PesertaWithRelations = User & {
   bus: Bus | null;
   tiket: Ticket[];
-  sewaan: Rental[];
+  optionalItems: OptionalItem[];
   status: StatusPeserta[];
 };
 
@@ -107,13 +107,13 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
           </div>
         )}
 
-        {peserta.sewaan.length > 0 && (
+        {peserta.optionalItems.length > 0 && (
           <div>
-            <h4 className="font-semibold text-base text-primary mb-2">Sewaan</h4>
+            <h4 className="font-semibold text-base text-primary mb-2">Item Opsional</h4>
             <div className="flex gap-2 flex-wrap">
-              {peserta.sewaan.map((sw) => (
-                <Badge key={sw.id} variant="outline">
-                  {sw.namaBarang}
+              {peserta.optionalItems.map((item) => (
+                <Badge key={item.id} variant="outline">
+                  {item.namaItem}
                 </Badge>
               ))}
             </div>

@@ -1,5 +1,5 @@
-import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { db } from "@/lib/db"
+import { NextResponse } from "next/server"
 
 export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -10,9 +10,9 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
       },
       include: {
         tiket: true,
-        sewaan: true,
+        optionalItems: true,
         bus: true,
-        status: true, // Include status
+        status: true,
       },
     });
 
@@ -33,7 +33,6 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     const {
       absenKeberangkatan,
       absenKepulangan,
-      sudahTerimaPeralatan,
       sudahTerimaBaju,
       sudahTerimaMakanan,
     } = body;
@@ -45,7 +44,6 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
       data: {
         absenKeberangkatan,
         absenKepulangan,
-        sudahTerimaPeralatan,
         sudahTerimaBaju,
         sudahTerimaMakanan,
         ...(absenKeberangkatan && { tanggalKeberangkatan: new Date() }),
@@ -53,9 +51,9 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
       },
       include: {
         tiket: true,
-        sewaan: true,
+        optionalItems: true,
         bus: true,
-        status: true, // Include status in response
+        status: true,
       },
     });
 

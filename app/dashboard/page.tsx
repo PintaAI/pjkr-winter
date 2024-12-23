@@ -2,9 +2,9 @@ import { LogoutButton } from "@/components/auth/logout-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ManagePackages } from "@/components/dashboard/manage-packages"
 import { ManageBuses } from "@/components/dashboard/manage-buses"
-import { ManageRentals } from "@/components/dashboard/manage-rentals"
 import { ManageStatus } from "@/components/dashboard/manage-status"
 import { ManagePeserta } from "@/components/dashboard/manage-peserta"
+import { ManageOptionalItems } from "@/components/dashboard/manage-optional-items"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Users, Package, Bus, CheckSquare } from "lucide-react"
@@ -32,7 +32,7 @@ export default function DashboardPage() {
           </TabsTrigger>
           <TabsTrigger value="packages" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            <span className="hidden md:inline">Kelola Paket & Peralatan</span>
+            <span className="hidden md:inline">Kelola Paket</span>
           </TabsTrigger>
           <TabsTrigger value="buses" className="flex items-center gap-2">
             <Bus className="h-4 w-4" />
@@ -55,8 +55,8 @@ export default function DashboardPage() {
               <ManagePackages />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Paket Sewa Peralatan</h2>
-              <ManageRentals />
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Item Opsional</h2>
+              <ManageOptionalItems />
             </div>
           </div>
         </TabsContent>

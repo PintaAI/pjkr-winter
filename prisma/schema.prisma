@@ -35,6 +35,7 @@ model User {
   telepon               String?
   ukuranBaju            String?   // Ukuran pakaian (S/M/L/XL/XXL atau custom)
   ukuranSepatu          String?   // Ukuran sepatu (250-275 atau custom)
+  tipeAlat              String?   // Tipe alat (ski/snowboard)
   
   // Relasi yang sudah ada
   accounts Account[]
@@ -42,7 +43,7 @@ model User {
 
   // Relasi baru
   tiket   Ticket[]
-  sewaan  Rental[]
+  optionalItems  OptionalItem[]
   bus     Bus?     @relation(fields: [busId], references: [id])
   busId   String?
   status  StatusPeserta[] // Relasi dengan status peserta
@@ -97,12 +98,12 @@ model Ticket {
   pesertaId   String
 }
 
-// Model Sewa
-model Rental {
+// Model Optional Items (untuk item tambahan seperti jaket, kacamata, dll)
+model OptionalItem {
   id          String     @id @default(cuid())
-  namaBarang  String
-  hargaSewa   Float
-  items       String[]   @default([])
+  namaItem    String
+  harga       Float
+  deskripsi   String[]   @default([])
   
   // Relasi dengan peserta
   peserta     User       @relation(fields: [pesertaId], references: [id])

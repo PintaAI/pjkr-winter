@@ -14,7 +14,7 @@ interface PesertaData {
 interface EventRegistrationData {
   peserta: PesertaData[]
   ticketType: string
-  rentals: string[]
+  optionalItems: string[]
   busId: string | ""
 }
 
@@ -68,10 +68,10 @@ export async function getTicketData() {
   }
 }
 
-// Mengambil data rental dari database
-export async function getRentalData() {
+// Mengambil data item opsional dari database
+export async function getOptionalItemData() {
   try {
-    const rentals = await db.rental.findMany({
+    const items = await db.optionalItem.findMany({
       where: {
         peserta: {
           role: "PANITIA"
@@ -80,22 +80,22 @@ export async function getRentalData() {
     })
     return { 
       success: true, 
-      data: rentals.map(rental => ({
-        id: rental.id,
-        namaBarang: rental.namaBarang,
-        hargaSewa: rental.hargaSewa,
-        items: rental.items
+      data: items.map(item => ({
+        id: item.id,
+        namaItem: item.namaItem,
+        harga: item.harga,
+        deskripsi: item.deskripsi
       }))
     }
   } catch (error) {
-    console.error('Error getting rental data:', error)
-    return { success: false, error: 'Gagal mengambil data rental' }
+    console.error('Error getting optional item data:', error)
+    return { success: false, error: 'Gagal mengambil data item opsional' }
   }
 }
 
 export async function registerEvent(data: EventRegistrationData) {
   try {
-    const { peserta, ticketType, rentals, busId } = data
+    const { peserta, ticketType, optionalItems, busId } = data
 
     // Cek kapasitas bus jika dipilih
     if (busId) {
@@ -132,20 +132,20 @@ export async function registerEvent(data: EventRegistrationData) {
       return { success: false, message: 'Tipe tiket tidak valid' }
     }
 
-    interface RentalConfig {
+    interface OptionalItemConfig {
       id: string
-      namaBarang: string
-      hargaSewa: number
-      items: string[]
+      namaItem: string
+      harga: number
+      deskripsi: string[]
     }
 
-    // Ambil konfigurasi rental jika ada
-    let rentalConfigs: RentalConfig[] = []
-    if (rentals.length > 0) {
-      rentalConfigs = await db.rental.findMany({
+    // Ambil konfigurasi item opsional jika ada
+    let optionalItemConfigs: OptionalItemConfig[] = []
+    if (optionalItems.length > 0) {
+      optionalItemConfigs = await db.optionalItem.findMany({
         where: {
           id: {
-            in: rentals
+            in: optionalItems
           },
           peserta: {
             role: "PANITIA"
@@ -223,21 +223,21 @@ export async function registerEvent(data: EventRegistrationData) {
         })
       }
 
-      // Cek dan buat rental untuk peserta jika belum ada
-      for (const rental of rentalConfigs) {
-        const existingRental = await db.rental.findFirst({
+      // Cek dan buat item opsional untuk peserta jika belum ada
+      for (const item of optionalItemConfigs) {
+        const existingItem = await db.optionalItem.findFirst({
           where: {
             pesertaId: user.id,
-            namaBarang: rental.namaBarang
+            namaItem: item.namaItem
           }
         })
 
-        if (!existingRental) {
-          await db.rental.create({
+        if (!existingItem) {
+          await db.optionalItem.create({
             data: {
-              namaBarang: rental.namaBarang,
-              hargaSewa: rental.hargaSewa,
-              items: rental.items,
+              namaItem: item.namaItem,
+              harga: item.harga,
+              deskripsi: item.deskripsi,
               pesertaId: user.id,
             },
           })

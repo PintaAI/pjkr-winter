@@ -231,9 +231,9 @@ export function ManagePeserta() {
           </TableHeader>
           <TableBody>
             {filteredPeserta.map((p) => {
-              const tiketCost = p.tiket.reduce((acc: number, t: any) => acc + t.harga, 0);
-              const sewaanCost = p.sewaan.reduce((acc: number, s: any) => acc + s.hargaSewa, 0);
-              const totalCost = tiketCost + sewaanCost;
+              const tiketCost = p.tiket?.reduce((acc: number, t: any) => acc + t.harga, 0) || 0;
+              const optionalItemsCost = p.optionalItems?.reduce((acc: number, item: any) => acc + item.harga, 0) || 0;
+              const totalCost = tiketCost + optionalItemsCost;
 
               return (
                 <TableRow key={p.id}>
@@ -246,7 +246,7 @@ export function ManagePeserta() {
                     </button>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    {p.tiket.map((t: any) => (
+                    {p.tiket?.map((t: any) => (
                       <Badge
                         key={t.id}
                         variant="secondary"

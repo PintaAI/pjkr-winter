@@ -14,7 +14,7 @@ export async function getPesertaData() {
       },
       include: {
         tiket: true,
-        sewaan: true,
+        optionalItems: true,
         bus: true,
         status: true
       }
@@ -32,9 +32,10 @@ export async function getPesertaData() {
         ukuranBaju: p.ukuranBaju,
         ukuranSepatu: p.ukuranSepatu,
         tiket: p.tiket,
-        sewaan: p.sewaan,
+        optionalItems: p.optionalItems,
         bus: p.bus,
-        status: p.status
+        status: p.status,
+        tipeAlat: p.tipeAlat
       }))
     }
   } catch (error) {
@@ -89,8 +90,8 @@ export async function deletePeserta(id: string) {
       db.ticket.deleteMany({
         where: { pesertaId: id }
       }),
-      // Hapus sewaan peserta
-      db.rental.deleteMany({
+      // Hapus optional items peserta
+      db.optionalItem.deleteMany({
         where: { pesertaId: id }
       }),
       // Hapus user/peserta
@@ -107,11 +108,11 @@ export async function deletePeserta(id: string) {
   }
 }
 
-// Rental Management Functions
-export async function createRental(data: { 
-  namaBarang: string
-  hargaSewa: number
-  items: string[]
+// Optional Item Management Functions
+export async function createOptionalItem(data: {
+  namaItem: string
+  harga: number
+  deskripsi: string[]
 }) {
   try {
     // Dapatkan user panitia
@@ -123,31 +124,31 @@ export async function createRental(data: {
       return { success: false, message: "Tidak ada user panitia" }
     }
 
-    await db.rental.create({
+    await db.optionalItem.create({
       data: {
-        namaBarang: data.namaBarang,
-        hargaSewa: data.hargaSewa,
-        items: data.items,
+        namaItem: data.namaItem,
+        harga: data.harga,
+        deskripsi: data.deskripsi,
         pesertaId: panitia.id
       }
     })
 
     revalidatePath("/dashboard")
-    return { success: true, message: "Paket sewa berhasil ditambahkan" }
+    return { success: true, message: "Item opsional berhasil ditambahkan" }
   } catch (error) {
-    console.error("[CREATE_RENTAL_ERROR]", error)
-    return { success: false, message: "Gagal menambahkan paket sewa" }
+    console.error("[CREATE_OPTIONAL_ITEM_ERROR]", error)
+    return { success: false, message: "Gagal menambahkan item opsional" }
   }
 }
 
-export async function updateRental(id: string, data: {
-  namaBarang: string
-  hargaSewa: number
-  items: string[]
+export async function updateOptionalItem(id: string, data: {
+  namaItem: string
+  harga: number
+  deskripsi: string[]
 }) {
   try {
-    // Pastikan rental dimiliki oleh panitia
-    const rental = await db.rental.findFirst({
+    // Pastikan item dimiliki oleh panitia
+    const item = await db.optionalItem.findFirst({
       where: {
         id,
         peserta: {
@@ -156,31 +157,31 @@ export async function updateRental(id: string, data: {
       }
     })
 
-    if (!rental) {
-      return { success: false, message: "Paket sewa tidak ditemukan" }
+    if (!item) {
+      return { success: false, message: "Item opsional tidak ditemukan" }
     }
 
-    await db.rental.update({
+    await db.optionalItem.update({
       where: { id },
       data: {
-        namaBarang: data.namaBarang,
-        hargaSewa: data.hargaSewa,
-        items: data.items
+        namaItem: data.namaItem,
+        harga: data.harga,
+        deskripsi: data.deskripsi
       }
     })
 
     revalidatePath("/dashboard")
-    return { success: true, message: "Paket sewa berhasil diperbarui" }
+    return { success: true, message: "Item opsional berhasil diperbarui" }
   } catch (error) {
-    console.error("[UPDATE_RENTAL_ERROR]", error)
-    return { success: false, message: "Gagal memperbarui paket sewa" }
+    console.error("[UPDATE_OPTIONAL_ITEM_ERROR]", error)
+    return { success: false, message: "Gagal memperbarui item opsional" }
   }
 }
 
-export async function deleteRental(id: string) {
+export async function deleteOptionalItem(id: string) {
   try {
-    // Pastikan rental dimiliki oleh panitia
-    const rental = await db.rental.findFirst({
+    // Pastikan item dimiliki oleh panitia
+    const item = await db.optionalItem.findFirst({
       where: {
         id,
         peserta: {
@@ -189,25 +190,25 @@ export async function deleteRental(id: string) {
       }
     })
 
-    if (!rental) {
-      return { success: false, message: "Paket sewa tidak ditemukan" }
+    if (!item) {
+      return { success: false, message: "Item opsional tidak ditemukan" }
     }
 
-    await db.rental.delete({
+    await db.optionalItem.delete({
       where: { id }
     })
 
     revalidatePath("/dashboard")
-    return { success: true, message: "Paket sewa berhasil dihapus" }
+    return { success: true, message: "Item opsional berhasil dihapus" }
   } catch (error) {
-    console.error("[DELETE_RENTAL_ERROR]", error)
-    return { success: false, message: "Gagal menghapus paket sewa" }
+    console.error("[DELETE_OPTIONAL_ITEM_ERROR]", error)
+    return { success: false, message: "Gagal menghapus item opsional" }
   }
 }
 
-export async function getRentalData() {
+export async function getOptionalItemData() {
   try {
-    const rentals = await db.rental.findMany({
+    const items = await db.optionalItem.findMany({
       where: {
         peserta: {
           role: UserRole.PANITIA
@@ -217,16 +218,16 @@ export async function getRentalData() {
 
     return { 
       success: true, 
-      data: rentals.map(rental => ({
-        id: rental.id,
-        namaBarang: rental.namaBarang,
-        hargaSewa: rental.hargaSewa,
-        items: rental.items
+      data: items.map(item => ({
+        id: item.id,
+        namaItem: item.namaItem,
+        harga: item.harga,
+        deskripsi: item.deskripsi
       }))
     }
   } catch (error) {
-    console.error("[GET_RENTAL_DATA_ERROR]", error)
-    return { success: false, message: "Gagal mendapatkan data paket sewa" }
+    console.error("[GET_OPTIONAL_ITEM_DATA_ERROR]", error)
+    return { success: false, message: "Gagal mendapatkan data item opsional" }
   }
 }
 

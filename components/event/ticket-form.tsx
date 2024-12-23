@@ -24,7 +24,7 @@ export default function TicketForm({
 }: TicketFormProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg sm:text-xl font-semibold">Pilihan Tiket</h2>
+      <h2 className="text-xl sm:text-xl font-semibold">PILIH TIKET</h2>
       <p className="text-sm text-gray-500">Pilih tipe tiket yang cocok buat mu</p>
       <div className="flex flex-col lg:flex-row gap-4">
         {ticketData.map((ticket) => {
@@ -33,15 +33,23 @@ export default function TicketForm({
             <Card 
               key={ticket.tipe}
               className={cn(
-                "cursor-pointer transition-all flex-1",
-                isSelected ? 'border-2 border-primary ring-2 ring-primary/20' : 'hover:border-primary/20'
+                "cursor-pointer transition-all flex-1 border-2",
+                isSelected 
+                  ? 'border-accent ring-2 ring-accent/20' 
+                  : 'border-secondary hover:border-accent/20'
               )}
               onClick={() => onTypeChange(ticket.tipe)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-base">{ticket.tipe}</h3>
-                  <Badge variant="secondary" className="font-semibold">
+                  <Badge 
+                    variant={isSelected ? "default" : "secondary"} 
+                    className={cn(
+                      "font-semibold text-black",
+                      isSelected && "bg-accent hover:bg-accent/90"
+                    )}
+                  >
                     {formatWon(ticket.harga)}
                   </Badge>
                 </div>
@@ -51,7 +59,7 @@ export default function TicketForm({
                 <ul className="space-y-1.5">
                   {ticket.features.map((feature, index) => (
                     <li key={index} className="text-sm flex items-center gap-2">
-                      <span className="text-primary">•</span>
+                      <span className="text-accent">•</span>
                       {feature}
                     </li>
                   ))}

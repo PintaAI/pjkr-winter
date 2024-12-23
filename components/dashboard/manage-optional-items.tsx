@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { createRental, updateRental, deleteRental, getRentalData } from "@/app/actions/dashboard"
+import { createOptionalItem, updateOptionalItem, deleteOptionalItem, getOptionalItemData } from "@/app/actions/dashboard"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { formatWon } from "@/lib/utils"
@@ -17,26 +17,26 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-interface RentalForm {
-  namaBarang: string
-  hargaSewa: number
-  items: string[]
+interface OptionalItemForm {
+  namaItem: string
+  harga: number
+  deskripsi: string[]
 }
 
-interface RentalData extends RentalForm {
+interface OptionalItemData extends OptionalItemForm {
   id: string
 }
 
-const initialForm: RentalForm = {
-  namaBarang: "",
-  hargaSewa: 0,
-  items: []
+const initialForm: OptionalItemForm = {
+  namaItem: "",
+  harga: 0,
+  deskripsi: []
 }
 
-export function ManageRentals() {
-  const [rentals, setRentals] = useState<RentalData[]>([])
-  const [editForm, setEditForm] = useState<RentalForm>(initialForm)
-  const [selectedRentalId, setSelectedRentalId] = useState<string | null>(null)
+export function ManageOptionalItems() {
+  const [items, setItems] = useState<OptionalItemData[]>([])
+  const [editForm, setEditForm] = useState<OptionalItemForm>(initialForm)
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,18 +46,18 @@ export function ManageRentals() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
 
   useEffect(() => {
-    loadRentalData()
+    loadOptionalItemData()
   }, [])
 
-  const loadRentalData = async () => {
+  const loadOptionalItemData = async () => {
     try {
-      const result = await getRentalData()
+      const result = await getOptionalItemData()
       if (result.success && result.data) {
-        setRentals(result.data)
+        setItems(result.data)
       }
     } catch (error) {
-      console.error("Error loading rental data:", error)
-      setError("Gagal memuat data sewa")
+      console.error("Error loading optional item data:", error)
+      setError("Gagal memuat data item")
     }
   }
 
@@ -69,21 +69,21 @@ export function ManageRentals() {
 
     try {
       let result
-      if (isEditing && selectedRentalId) {
-        result = await updateRental(selectedRentalId, {
-          namaBarang: editForm.namaBarang,
-          hargaSewa: editForm.hargaSewa,
-          items: editForm.items
+      if (isEditing && selectedItemId) {
+        result = await updateOptionalItem(selectedItemId, {
+          namaItem: editForm.namaItem,
+          harga: editForm.harga,
+          deskripsi: editForm.deskripsi
         })
       } else {
-        result = await createRental(editForm)
+        result = await createOptionalItem(editForm)
       }
 
       if (result.success) {
         setSuccess(result.message)
-        await loadRentalData()
+        await loadOptionalItemData()
         setIsEditing(false)
-        setSelectedRentalId(null)
+        setSelectedItemId(null)
         setEditForm(initialForm)
         setAddDialogOpen(false)
         setEditDialogOpen(false)
@@ -91,14 +91,14 @@ export function ManageRentals() {
         setError(result.message)
       }
     } catch (error) {
-      setError("Terjadi kesalahan saat memproses data sewa")
+      setError("Terjadi kesalahan saat memproses data item")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus paket sewa ini?")) {
+    if (!confirm("Apakah Anda yakin ingin menghapus item ini?")) {
       return
     }
 
@@ -107,15 +107,15 @@ export function ManageRentals() {
     setSuccess(null)
 
     try {
-      const result = await deleteRental(id)
+      const result = await deleteOptionalItem(id)
       if (result.success) {
         setSuccess(result.message)
-        await loadRentalData()
+        await loadOptionalItemData()
       } else {
         setError(result.message)
       }
     } catch (error) {
-      setError("Terjadi kesalahan saat menghapus paket sewa")
+      setError("Terjadi kesalahan saat menghapus item")
     } finally {
       setIsLoading(false)
     }
@@ -125,7 +125,7 @@ export function ManageRentals() {
     if (newItem.trim()) {
       setEditForm({
         ...editForm,
-        items: [...editForm.items, newItem.trim()]
+        deskripsi: [...editForm.deskripsi, newItem.trim()]
       })
       setNewItem("")
     }
@@ -134,7 +134,7 @@ export function ManageRentals() {
   const removeItem = (index: number) => {
     setEditForm({
       ...editForm,
-      items: editForm.items.filter((_, i) => i !== index)
+      deskripsi: editForm.deskripsi.filter((_, i) => i !== index)
     })
   }
 
@@ -152,47 +152,47 @@ export function ManageRentals() {
         </Alert>
       )}
 
-      {/* Dialog untuk Tambah Paket Sewa Baru */}
+      {/* Dialog untuk Tambah Item Baru */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogTrigger asChild>
           <Button 
             onClick={() => {
               setIsEditing(false)
-              setSelectedRentalId(null)
+              setSelectedItemId(null)
               setEditForm(initialForm)
               setAddDialogOpen(true)
             }}
           >
-            Tambah Paket Sewa Baru
+            Tambah Item Opsional
           </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Tambah Paket Sewa Baru</DialogTitle>
+            <DialogTitle>Tambah Item Opsional</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Nama Paket</Label>
+              <Label>Nama Item</Label>
               <Input
-                value={editForm.namaBarang}
+                value={editForm.namaItem}
                 onChange={(e) => setEditForm({
                   ...editForm,
-                  namaBarang: e.target.value
+                  namaItem: e.target.value
                 })}
                 required
                 disabled={isLoading}
-                placeholder="Contoh: Paket Ski Pemula"
+                placeholder="Contoh: Jaket Winter"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Harga Sewa</Label>
+              <Label>Harga</Label>
               <Input
                 type="number"
-                value={editForm.hargaSewa}
+                value={editForm.harga}
                 onChange={(e) => setEditForm({
                   ...editForm,
-                  hargaSewa: parseInt(e.target.value)
+                  harga: parseInt(e.target.value)
                 })}
                 required
                 disabled={isLoading}
@@ -200,12 +200,12 @@ export function ManageRentals() {
             </div>
 
             <div className="space-y-2">
-              <Label>Item yang Termasuk</Label>
+              <Label>Deskripsi</Label>
               <div className="flex space-x-2">
                 <Input
                   value={newItem}
                   onChange={(e) => setNewItem(e.target.value)}
-                  placeholder="Tambah item baru"
+                  placeholder="Tambah deskripsi"
                   disabled={isLoading}
                 />
                 <Button 
@@ -217,7 +217,7 @@ export function ManageRentals() {
                 </Button>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
-                {editForm.items.map((item, index) => (
+                {editForm.deskripsi.map((item, index) => (
                   <Badge 
                     key={index} 
                     variant="secondary"
@@ -244,14 +244,14 @@ export function ManageRentals() {
                 type="submit"
                 disabled={isLoading}
               >
-                {isLoading ? "Menyimpan..." : "Tambah Paket"}
+                {isLoading ? "Menyimpan..." : "Tambah Item"}
               </Button>
               <Button 
                 type="button" 
                 variant="outline"
                 onClick={() => {
                   setIsEditing(false)
-                  setSelectedRentalId(null)
+                  setSelectedItemId(null)
                   setEditForm(initialForm)
                   setAddDialogOpen(false)
                 }}
@@ -265,43 +265,43 @@ export function ManageRentals() {
       </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {rentals.map((rental) => (
-          <Card key={rental.id} className="relative">
+        {items.map((item) => (
+          <Card key={item.id} className="relative">
             <CardHeader>
-              <CardTitle>{rental.namaBarang}</CardTitle>
+              <CardTitle>{item.namaItem}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
                   <p className="text-2xl font-bold text-blue-600">
-                    {formatWon(rental.hargaSewa)}
+                    {formatWon(item.harga)}
                   </p>
                 </div>
                 
                 <div>
-                  <p className="font-medium mb-2">Termasuk:</p>
+                  <p className="font-medium mb-2">Deskripsi:</p>
                   <div className="flex flex-wrap gap-2">
-                    {rental.items.map((item, index) => (
+                    {item.deskripsi.map((desc, index) => (
                       <Badge key={index} variant="secondary">
-                        {item}
+                        {desc}
                       </Badge>
                     ))}
                   </div>
                 </div>
 
                 <div className="flex space-x-2">
-                  {/* Dialog untuk Edit Paket Sewa */}
+                  {/* Dialog untuk Edit Item */}
                   <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                     <DialogTrigger asChild>
                       <Button 
                         variant="outline"
                         onClick={() => {
                           setEditForm({
-                            namaBarang: rental.namaBarang,
-                            hargaSewa: rental.hargaSewa,
-                            items: rental.items
+                            namaItem: item.namaItem,
+                            harga: item.harga,
+                            deskripsi: item.deskripsi
                           })
-                          setSelectedRentalId(rental.id)
+                          setSelectedItemId(item.id)
                           setIsEditing(true)
                           setEditDialogOpen(true)
                         }}
@@ -311,17 +311,16 @@ export function ManageRentals() {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Edit Paket Sewa</DialogTitle>
+                        <DialogTitle>Edit Item Opsional</DialogTitle>
                       </DialogHeader>
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
-                          <Label>Harga Sewa</Label>
+                          <Label>Nama Item</Label>
                           <Input
-                            type="number"
-                            value={editForm.hargaSewa}
+                            value={editForm.namaItem}
                             onChange={(e) => setEditForm({
                               ...editForm,
-                              hargaSewa: parseInt(e.target.value)
+                              namaItem: e.target.value
                             })}
                             required
                             disabled={isLoading}
@@ -329,12 +328,26 @@ export function ManageRentals() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Item yang Termasuk</Label>
+                          <Label>Harga</Label>
+                          <Input
+                            type="number"
+                            value={editForm.harga}
+                            onChange={(e) => setEditForm({
+                              ...editForm,
+                              harga: parseInt(e.target.value)
+                            })}
+                            required
+                            disabled={isLoading}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Deskripsi</Label>
                           <div className="flex space-x-2">
                             <Input
                               value={newItem}
                               onChange={(e) => setNewItem(e.target.value)}
-                              placeholder="Tambah item baru"
+                              placeholder="Tambah deskripsi"
                               disabled={isLoading}
                             />
                             <Button 
@@ -346,7 +359,7 @@ export function ManageRentals() {
                             </Button>
                           </div>
                           <div className="mt-2 flex flex-wrap gap-2">
-                            {editForm.items.map((item, index) => (
+                            {editForm.deskripsi.map((item, index) => (
                               <Badge 
                                 key={index} 
                                 variant="secondary"
@@ -380,7 +393,7 @@ export function ManageRentals() {
                             variant="outline"
                             onClick={() => {
                               setIsEditing(false)
-                              setSelectedRentalId(null)
+                              setSelectedItemId(null)
                               setEditForm(initialForm)
                               setEditDialogOpen(false)
                             }}
@@ -394,7 +407,7 @@ export function ManageRentals() {
                   </Dialog>
                   <Button 
                     variant="destructive"
-                    onClick={() => handleDelete(rental.id)}
+                    onClick={() => handleDelete(item.id)}
                     disabled={isLoading}
                   >
                     Hapus

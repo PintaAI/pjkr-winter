@@ -3,16 +3,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatWon } from "@/lib/utils"
 import { BusData } from "./bus-form"
-import { RentalData } from "./rental-form"
+import { OptionalItemData } from "./optional-item-form"
 import { TicketData } from "./ticket-form"
 
 interface SummaryFormProps {
   pesertaCount: number
   selectedTicket: TicketData | undefined
   selectedBus: BusData | undefined
-  selectedRentals: RentalData[]
+  selectedOptionalItems: OptionalItemData[]
   totalTicketPerPerson: number
-  totalRentalsPerPerson: number
+  totalOptionalItemsPerPerson: number
   totalPerPerson: number
   totalHarga: number
 }
@@ -21,9 +21,9 @@ export default function SummaryForm({
   pesertaCount,
   selectedTicket,
   selectedBus,
-  selectedRentals,
+  selectedOptionalItems,
   totalTicketPerPerson,
-  totalRentalsPerPerson,
+  totalOptionalItemsPerPerson,
   totalPerPerson,
   totalHarga
 }: SummaryFormProps) {
@@ -52,12 +52,12 @@ export default function SummaryForm({
           </span>
         </div>
         <div className="flex justify-between items-start">
-          <span className="font-medium">Peralatan:</span>
+          <span className="font-medium">Item Tambahan:</span>
           <div className="text-right flex-1 ml-4">
-            <div>{selectedRentals.length > 0 ? selectedRentals.map(r => r.namaBarang).join(', ') : '-'}</div>
-            {selectedRentals.length > 0 && (
+            <div>{selectedOptionalItems.length > 0 ? selectedOptionalItems.map(item => item.namaItem).join(', ') : '-'}</div>
+            {selectedOptionalItems.length > 0 && (
               <div className="text-sm text-muted-foreground">
-                {formatWon(totalRentalsPerPerson)}/orang
+                {formatWon(totalOptionalItemsPerPerson)}/orang
               </div>
             )}
           </div>

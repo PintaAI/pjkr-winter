@@ -21,7 +21,13 @@ interface PesertaData {
   address: string
   ukuranBaju: string
   ukuranSepatu: string
+  tipeAlat: string
 }
+
+const tipeAlatOptions = [
+  { label: "Ski", value: "ski" },
+  { label: "Snowboard", value: "snowboard" }
+]
 
 const ukuranBajuOptions = [
   { label: "S (90)", value: "S" },
@@ -42,6 +48,7 @@ interface PesertaFormProps {
   onAddPeserta: () => void
   onRemovePeserta: (index: number) => void
   onPesertaChange: (index: number, field: keyof PesertaData, value: string) => void
+  validateEmail?: (email: string, currentIndex: number) => boolean
 }
 
 export default function PesertaForm({
@@ -50,7 +57,8 @@ export default function PesertaForm({
   isLoading,
   onAddPeserta,
   onRemovePeserta,
-  onPesertaChange
+  onPesertaChange,
+  validateEmail
 }: PesertaFormProps) {
   return (
     <div className="space-y-4">
@@ -110,7 +118,13 @@ export default function PesertaForm({
                 id={`email_${index}`}
                 placeholder="email@example.com"
                 value={peserta.email}
-                onChange={(e) => onPesertaChange(index, 'email', e.target.value)}
+                onChange={(e) => {
+                  const newEmail = e.target.value;
+                  if (validateEmail && !validateEmail(newEmail, index)) {
+                    errors[`email_${index}`] = "Email sudah digunakan oleh peserta lain";
+                  }
+                  onPesertaChange(index, 'email', newEmail);
+                }}
                 required
                 disabled={isLoading}
               />
@@ -194,6 +208,29 @@ export default function PesertaForm({
                 </Select>
                 {errors[`ukuranSepatu_${index}`] && (
                   <p className="text-sm text-red-500">{errors[`ukuranSepatu_${index}`]}</p>
+                )}
+              </div>
+
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor={`tipeAlat_${index}`}>Tipe Alat</Label>
+                <Select
+                  disabled={isLoading}
+                  value={peserta.tipeAlat}
+                  onValueChange={(value) => onPesertaChange(index, 'tipeAlat', value)}
+                >
+                  <SelectTrigger id={`tipeAlat_${index}`}>
+                    <SelectValue placeholder="Pilih Tipe Alat" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tipeAlatOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors[`tipeAlat_${index}`] && (
+                  <p className="text-sm text-red-500">{errors[`tipeAlat_${index}`]}</p>
                 )}
               </div>
             </div>
