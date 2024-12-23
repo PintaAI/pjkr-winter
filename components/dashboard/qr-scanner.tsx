@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { QrReader } from "react-qr-reader";
+import { useState, useEffect, useRef } from "react";
+import QrScanner from "qr-scanner";
 import { toast } from "sonner";
 import { PesertaCard } from "./peserta-card";
 import { User, Bus, Ticket, StatusPeserta, OptionalItem } from "@prisma/client";
@@ -12,6 +12,9 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "../ui/drawer";
+
+// Configure QR Scanner worker path
+QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
 
 type PesertaWithRelations = User & {
   bus: Bus | null;
@@ -24,55 +27,76 @@ export function QRScanner() {
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const qrScannerRef = useRef<QrScanner | null>(null);
 
-  const handleResult = async (result: any, error: any) => {
-    if (error) {
-      console.warn("Kesalahan pemindaian kode:", error);
-      return;
-    }
+  useEffect(() => {
+    const videoElem = videoRef.current;
+    if (!videoElem) return;
 
-    if (!result?.text) return;
+    const startScanner = async () => {
+      try {
+        // Create QR Scanner instance
+        qrScannerRef.current = new QrScanner(
+          videoElem,
+          async (result: QrScanner.ScanResult) => {
+            const qrText = result.data;
+            
+            // Validate QR code format
+            if (!qrText.match(/^[a-zA-Z0-9_-]+$/)) {
+              console.warn("Format QR code tidak valid");
+              return;
+            }
 
-    // Validate QR code format
-    if (!result.text.match(/^[a-zA-Z0-9_-]+$/)) {
-      console.warn("Format QR code tidak valid");
-      return;
-    }
+            try {
+              setIsLoading(true);
+              const response = await fetch(`/api/peserta/${qrText}`);
+              
+              if (!response.ok) {
+                throw new Error("Gagal mengambil data peserta");
+              }
 
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/peserta/${result.text}`);
-      
-      if (!response.ok) {
-        throw new Error("Gagal mengambil data peserta");
+              const data = await response.json();
+              setPeserta(data);
+              setDrawerOpen(true);
+              toast.success("Data peserta berhasil ditemukan");
+            } catch (error) {
+              console.error("Error:", error);
+              toast.error("Gagal memproses QR code");
+            } finally {
+              setIsLoading(false);
+            }
+          },
+          {
+            highlightScanRegion: true,
+            highlightCodeOutline: true,
+            maxScansPerSecond: 5,
+            preferredCamera: 'environment',
+          }
+        );
+
+        await qrScannerRef.current.start();
+      } catch (error) {
+        console.error('Error starting QR scanner:', error);
+        toast.error('Gagal mengakses kamera. Pastikan kamera diizinkan dan tidak sedang digunakan aplikasi lain.');
       }
+    };
 
-      const data = await response.json();
-      setPeserta(data);
-      setDrawerOpen(true);
-      toast.success("Data peserta berhasil ditemukan");
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Gagal memproses QR code");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    startScanner();
+
+    return () => {
+      if (qrScannerRef.current) {
+        qrScannerRef.current.destroy();
+      }
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
       <div className="w-full max-w-sm mx-auto">
-        <QrReader
-          constraints={{
-            facingMode: "environment"
-          }}
-          onResult={handleResult}
-          className="w-full aspect-square"
-          videoStyle={{ objectFit: "cover" }}
-          scanDelay={500}
-          ViewFinder={() => (
-            <div className="border-2 border-primary w-48 h-48 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-          )}
+        <video 
+          ref={videoRef}
+          className="w-full aspect-square object-cover"
         />
       </div>
 
