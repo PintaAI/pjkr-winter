@@ -3,7 +3,8 @@
 import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { saveAs } from 'file-saver';
 import { Badge } from "@/components/ui/badge";
 import html2canvas from "html2canvas";
 
@@ -23,11 +24,6 @@ export function PesertaQR({ peserta }: PesertaQRProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const ticketRef = useRef<HTMLDivElement>(null);
 
-  const isIOS = () => {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  };
-
   const handleDownload = async () => {
     if (!ticketRef.current) return;
     
@@ -35,37 +31,18 @@ export function PesertaQR({ peserta }: PesertaQRProps) {
       setIsDownloading(true);
       
       const canvas = await html2canvas(ticketRef.current, {
-        scale: 2,
+        scale: 3,
         backgroundColor: "white",
+        logging: true,
+        useCORS: true,
+        allowTaint: true
       });
       
-      // Convert canvas to blob
-      const blobPromise = new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob as Blob);
-        }, 'image/png');
-      });
-      
-      const blob = await blobPromise;
-      const blobUrl = URL.createObjectURL(blob);
-      
-      if (isIOS()) {
-        // For iOS, open in new tab
-        window.open(blobUrl, '_blank');
-      } else {
-        // For other devices, use download
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = `tiket-${peserta.name.toLowerCase().replace(/\s+/g, "-")}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-      
-      // Clean up blob URL after a delay
-      setTimeout(() => {
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          saveAs(blob, `tiket-${peserta.name.toLowerCase().replace(/\s+/g, "-")}.png`);
+        }
+      }, 'image/png', 1.0);
       
     } catch (error) {
       console.error("Error downloading ticket:", error);
