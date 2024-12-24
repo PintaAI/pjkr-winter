@@ -28,7 +28,7 @@ export const ResortContent = () => {
             style={{ objectPosition: '50% 80%' }}
             priority
           />
-            <div className="absolute top-4 -right-3 bg-secondary/80 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="absolute top-4 -right-0 bg-secondary/80 backdrop-blur-sm px-4 py-2 rounded-full">
               <p className="text-sm">Kesulitan area : <span className="font-semibold">Pemula - Mahir</span></p>
             </div>
           </div>
