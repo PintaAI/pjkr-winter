@@ -23,12 +23,72 @@ type PesertaWithRelations = User & {
   status: StatusPeserta[];
 };
 
-export function QRScanner() {
+interface QRScannerProps {
+  onScanSuccess?: (data: PesertaWithRelations) => void;
+}
+
+export function QRScanner({ onScanSuccess }: QRScannerProps) {
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
+  const lastScannedRef = useRef<{ code: string; timestamp: number } | null>(null);
+
+  // Fungsi untuk mengontrol scanner
+  const handleScannerControl = (isDrawerOpen: boolean) => {
+    if (!qrScannerRef.current) return;
+    
+    if (isDrawerOpen) {
+      qrScannerRef.current.pause();
+    } else {
+      qrScannerRef.current.start();
+    }
+  };
+
+  // Fungsi untuk memproses QR code dengan debounce
+  const processQRCode = async (qrText: string) => {
+    // Cek apakah code yang sama telah di-scan dalam 5 detik terakhir
+    const now = Date.now();
+    if (
+      lastScannedRef.current?.code === qrText &&
+      now - lastScannedRef.current.timestamp < 5000
+    ) {
+      return; // Abaikan scan yang terlalu cepat
+    }
+
+    // Update referensi scan terakhir
+    lastScannedRef.current = {
+      code: qrText,
+      timestamp: now,
+    };
+
+    // Validate QR code format
+    if (!qrText.match(/^[a-zA-Z0-9_-]+$/)) {
+      console.warn("Format QR code tidak valid");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/peserta/${qrText}`);
+      
+      if (!response.ok) {
+        throw new Error("Gagal mengambil data peserta");
+      }
+
+      const data = await response.json();
+      setPeserta(data);
+      setDrawerOpen(true);
+      onScanSuccess?.(data);
+      toast.success("Data peserta berhasil ditemukan");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Gagal memproses QR code");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const videoElem = videoRef.current;
@@ -40,32 +100,7 @@ export function QRScanner() {
         qrScannerRef.current = new QrScanner(
           videoElem,
           async (result: QrScanner.ScanResult) => {
-            const qrText = result.data;
-            
-            // Validate QR code format
-            if (!qrText.match(/^[a-zA-Z0-9_-]+$/)) {
-              console.warn("Format QR code tidak valid");
-              return;
-            }
-
-            try {
-              setIsLoading(true);
-              const response = await fetch(`/api/peserta/${qrText}`);
-              
-              if (!response.ok) {
-                throw new Error("Gagal mengambil data peserta");
-              }
-
-              const data = await response.json();
-              setPeserta(data);
-              setDrawerOpen(true);
-              toast.success("Data peserta berhasil ditemukan");
-            } catch (error) {
-              console.error("Error:", error);
-              toast.error("Gagal memproses QR code");
-            } finally {
-              setIsLoading(false);
-            }
+            await processQRCode(result.data);
           },
           {
             highlightScanRegion: true,
@@ -89,7 +124,12 @@ export function QRScanner() {
         qrScannerRef.current.destroy();
       }
     };
-  }, []);
+  }, [onScanSuccess]);
+
+  // Effect untuk mengontrol scanner berdasarkan status drawer
+  useEffect(() => {
+    handleScannerControl(drawerOpen);
+  }, [drawerOpen]);
 
   return (
     <div className="space-y-4">
