@@ -36,6 +36,7 @@ model User {
   ukuranBaju            String?   // Ukuran pakaian (S/M/L/XL/XXL atau custom)
   ukuranSepatu          String?   // Ukuran sepatu (250-275 atau custom)
   tipeAlat              String?   // Tipe alat (ski/snowboard)
+  buktiPembayaran       String?   // Bukti pembayaran
   
   // Relasi yang sudah ada
   accounts Account[]

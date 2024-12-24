@@ -290,10 +290,24 @@ export async function registerEvent(data: EventRegistrationData) {
       createdUsers.push(user)
     }
 
+    // Get bus name if bus was selected
+    const busName = busId ? (await db.bus.findUnique({ where: { id: busId } }))?.namaBus : '';
+
+    // Get full peserta data for QR codes
+    const pesertaData = createdUsers.map(user => ({
+      id: user.id,
+      name: user.name || '',
+      email: user.email,
+      ukuranSepatu: user.ukuranSepatu || '',
+      ukuranBaju: user.ukuranBaju || '',
+      jenisTiket: ticketType,
+      namaBus: busName || 'Tidak memilih bus'
+    }));
+
     return { 
       success: true, 
-      message: `Pendaftaran ${peserta.length} peserta berhasil, silahkan lakukan pembayaran`,
-      userIds: createdUsers.map(u => u.id)
+      message: `Pendaftaran ${peserta.length} peserta berhasil`,
+      data: pesertaData
     }
   } catch (error) {
     console.error('Error in event registration:', error)

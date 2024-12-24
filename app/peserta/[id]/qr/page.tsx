@@ -13,22 +13,38 @@ async function getPeserta(id: string) {
     where: {
       id: id,
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        ukuranBaju: true,
+        ukuranSepatu: true,
+        tiket: {
+          select: {
+            tipe: true
+          }
+        },
+        bus: {
+          select: {
+            namaBus: true
+          }
+        }
+      },
   });
 
   if (!peserta || !peserta.name) {
     notFound();
   }
 
-  return {
-    id: peserta.id,
-    name: peserta.name,
-    email: peserta.email,
-  };
+    return {
+      id: peserta.id,
+      name: peserta.name,
+      email: peserta.email,
+      ukuranBaju: peserta.ukuranBaju || "-",
+      ukuranSepatu: peserta.ukuranSepatu || "-",
+      jenisTiket: peserta.tiket[0]?.tipe || "Regular",
+      namaBus: peserta.bus?.namaBus || "Belum ditentukan"
+    };
 }
 
 export default async function QRPage(props: QRPageProps) {
@@ -38,7 +54,7 @@ export default async function QRPage(props: QRPageProps) {
   return (
     <div className="container py-10">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6 print:hidden">QR Code Peserta</h1>
+        <h1 className="text-2xl font-bold mb-6 print:hidden">Tiket PJKR Winter</h1>
         <PesertaQR peserta={peserta} />
       </div>
     </div>

@@ -35,7 +35,8 @@ export async function getPesertaData() {
         optionalItems: p.optionalItems,
         bus: p.bus,
         status: p.status,
-        tipeAlat: p.tipeAlat
+        tipeAlat: p.tipeAlat,
+        createdAt: p.createdAt
       }))
     }
   } catch (error) {

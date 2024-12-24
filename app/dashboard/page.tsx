@@ -5,9 +5,10 @@ import { ManageBuses } from "@/components/dashboard/manage-buses"
 import { ManageStatus } from "@/components/dashboard/manage-status"
 import { ManagePeserta } from "@/components/dashboard/manage-peserta"
 import { ManageOptionalItems } from "@/components/dashboard/manage-optional-items"
+import { ManageRegistrationLogs } from "@/components/dashboard/manage-registration-logs"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Users, Package, Bus, CheckSquare } from "lucide-react"
+import { Users, Package, Bus, CheckSquare, ClipboardList } from "lucide-react"
 
 export default function DashboardPage() {
   return (
@@ -25,7 +26,7 @@ export default function DashboardPage() {
 
       <Tabs defaultValue="peserta" className="space-y-6">
         {/* Keeping original tab structure */}
-        <TabsList className="grid grid-cols-4 gap-4">
+        <TabsList className="grid grid-cols-5 gap-4">
           <TabsTrigger value="peserta" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden md:inline">Daftar Peserta</span>
@@ -41,6 +42,10 @@ export default function DashboardPage() {
           <TabsTrigger value="status" className="flex items-center gap-2">
             <CheckSquare className="h-4 w-4" />
             <span className="hidden md:inline">Kelola Status</span>
+          </TabsTrigger>
+          <TabsTrigger value="logs" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            <span className="hidden md:inline">Log Registrasi</span>
           </TabsTrigger>
         </TabsList>
 
@@ -67,6 +72,10 @@ export default function DashboardPage() {
 
         <TabsContent value="status">
           <ManageStatus />
+        </TabsContent>
+
+        <TabsContent value="logs">
+          <ManageRegistrationLogs />
         </TabsContent>
       </Tabs>
     </div>
