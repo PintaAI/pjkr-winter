@@ -23,6 +23,11 @@ export function PesertaQR({ peserta }: PesertaQRProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const ticketRef = useRef<HTMLDivElement>(null);
 
+  const isIOS = () => {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  };
+
   const handleDownload = async () => {
     if (!ticketRef.current) return;
     
@@ -34,11 +39,34 @@ export function PesertaQR({ peserta }: PesertaQRProps) {
         backgroundColor: "white",
       });
       
-      const image = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = `tiket-${peserta.name.toLowerCase().replace(/\s+/g, "-")}.png`;
-      link.click();
+      // Convert canvas to blob
+      const blobPromise = new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob as Blob);
+        }, 'image/png');
+      });
+      
+      const blob = await blobPromise;
+      const blobUrl = URL.createObjectURL(blob);
+      
+      if (isIOS()) {
+        // For iOS, open in new tab
+        window.open(blobUrl, '_blank');
+      } else {
+        // For other devices, use download
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = `tiket-${peserta.name.toLowerCase().replace(/\s+/g, "-")}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      // Clean up blob URL after a delay
+      setTimeout(() => {
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+      
     } catch (error) {
       console.error("Error downloading ticket:", error);
     } finally {
