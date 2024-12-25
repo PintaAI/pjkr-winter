@@ -33,18 +33,21 @@ export function CTAContent() {
         
         {/* Registration Button */}
         <div className="w-full mx-auto px-4 z-10">
-          <Link href="/event-registration" className="block">
-            <Button 
-              className="w-[460px] h-[190px] text-white font-bold scale-75 text-2xl py-6 relative bg-background transition-colors"
-              style={{
-                backgroundImage: 'url("/tiket.svg")',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                border: 'none'
-              }}
-            >
-              <p className="drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]">DAFTAR<br /> EVENT WINTER SPORT</p>
-            </Button>
+          <Link 
+            href="/event-registration" 
+            className="block transition-transform hover:scale-105 duration-300 relative"
+          >
+            <Image 
+              src="/tiket.svg" 
+              alt="Registration Ticket" 
+              width={300} 
+              height={150} 
+              className="mx-auto"
+              priority
+            />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <p className="text-4xl font-bold text-center text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]">Daftar sekarang!</p>
+            </div>
           </Link>
         </div>
         

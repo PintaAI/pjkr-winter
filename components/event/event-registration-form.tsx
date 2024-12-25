@@ -13,6 +13,7 @@ import TicketForm, { TicketData } from './ticket-form'
 import BusForm, { BusData } from './bus-form'
 import OptionalItemForm, { OptionalItemData } from './optional-item-form'
 import SummaryForm from './summary-form'
+import { Badge } from '../ui/badge'
 
 // Simple spinner component
 function Spinner() {
@@ -249,7 +250,7 @@ export default function EventRegistrationForm() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6 max-w-7xl mx-auto py-4 sm:py-8 px-4 relative">
           {/* Timeline Guide */}
-          <div className="absolute left-4 sm:left-8 top-8 bottom-8">
+          <div className="absolute left-4 sm:left-8 top-8 bottom-8 -z-10">
             <div className="absolute left-4 top-0 bottom-0 border-l-2 border-dashed border-gray-400" />
           </div>
           {/* Main Content with padding for timeline */}
@@ -299,22 +300,25 @@ export default function EventRegistrationForm() {
               totalHarga={totalHarga}
             />
 
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold">Bukti Pembayaran</h3>
-                  <p className="text-sm text-muted-foreground">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md -ml-12">
+                <Badge variant="default" className="bg-accent rounded-sm text-black">6</Badge>
+                <h2 className="text-lg font-semibold">BUKTI PEMBAYARAN</h2>
+              </div>
+              <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500 ml-3">
                     Silahkan Transfer ke rekening BCA 1234567890 a/n PT. Acme Corp
                   </p>
-                </div>
-                <div className="space-y-2">
-                  <FileUpload onChange={handleFileUpload} />
-                  {errors.buktiPembayaran && (
-                    <p className="text-sm text-destructive">{errors.buktiPembayaran}</p>
-                  )}
-                  {formData.buktiPembayaran && (
-                    <p className="text-sm text-green-500">✓ Bukti pembayaran berhasil diunggah</p>
-                  )}
+                  <div className="space-y-2">
+                    <FileUpload onChange={handleFileUpload} />
+                    {errors.buktiPembayaran && (
+                      <p className="text-sm text-destructive">{errors.buktiPembayaran}</p>
+                    )}
+                    {formData.buktiPembayaran && (
+                      <p className="text-sm text-green-500">✓ Bukti pembayaran berhasil diunggah</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { BusFront } from "lucide-react"
+import { Badge } from "../ui/badge"
 
 interface BusData {
   id: string
@@ -25,8 +26,11 @@ export default function BusForm({
 }: BusFormProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl sm:text-xl font-semibold">PILIH BUS</h2>
-      <p className="text-sm text-gray-500">Pilih bus yang masih tersedia bangkunya</p>
+      <div className="flex items-center gap-2 px-3 py-1 rounded-md -ml-12">
+        <Badge variant="default" className="bg-accent rounded-sm text-black">3</Badge>
+        <h2 className="text-lg font-semibold">PILIH BUS</h2>
+      </div>
+      <p className="text-sm text-gray-500 ml-3">Pilih bus yang masih tersedia bangkunya</p>
       <div className="grid grid-cols-2 gap-4">
         {busData.map((bus) => {
           const isFull = bus.terisi >= bus.kapasitas

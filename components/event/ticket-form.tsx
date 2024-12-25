@@ -24,8 +24,11 @@ export default function TicketForm({
 }: TicketFormProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl sm:text-xl font-semibold">PILIH TIKET</h2>
-      <p className="text-sm text-gray-500">Pilih tipe tiket yang cocok buat mu</p>
+      <div className="flex items-center gap-2 px-3 py-1 rounded-md -ml-12">
+        <Badge variant="default" className="bg-accent rounded-sm text-black">2</Badge>
+        <h2 className="text-lg font-semibold">PILIH TIKET</h2>
+      </div>
+      <p className="text-sm text-gray-500 ml-3">Pilih tipe tiket yang cocok buat mu</p>
       <div className="flex flex-col lg:flex-row gap-4">
         {ticketData.map((ticket) => {
           const isSelected = selectedType === ticket.tipe

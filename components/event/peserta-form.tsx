@@ -2,6 +2,7 @@
 
 import { User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -62,8 +63,11 @@ export default function PesertaForm({
 }: PesertaFormProps) {
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg sm:text-xl font-semibold">Data Peserta</h2>
+      <div className="flex justify-between items-center relative">
+        <div className="flex items-center gap-2 px-3 py-1 rounded-md -ml-12">
+          <Badge variant="default" className="bg-accent rounded-sm text-black">1</Badge>
+          <h2 className="text-lg font-semibold">DATA PESERTA</h2>
+        </div>
         <Button 
           type="button" 
           variant="outline"
