@@ -307,9 +307,28 @@ export default function EventRegistrationForm() {
               </div>
               <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-500 ml-3">
-                    Silahkan Transfer ke rekening BCA 1234567890 a/n PT. Acme Corp
-                  </p>
+                  <div className="space-y-4">
+                    <div className="flex flex-col space-y-2">
+                      <p className="text-sm text-gray-500">Silahkan Transfer ke:</p>
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                        <div>
+                          <p className="font-semibold">우리 Bank</p>
+                          <p className="text-lg font-mono">1002762999866</p>
+                          <p className="text-sm">a/n SAGELLA RORES</p>
+                        </div>
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            navigator.clipboard.writeText('1002762999866');
+                            toast.success('Nomor rekening berhasil disalin!');
+                          }}
+                          className="h-8"
+                        >
+                          Salin
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <FileUpload onChange={handleFileUpload} />
                     {errors.buktiPembayaran && (

@@ -26,8 +26,8 @@ interface PesertaData {
 }
 
 const tipeAlatOptions = [
-  { label: "Ski", value: "ski" },
-  { label: "Snowboard", value: "snowboard" }
+  { label: "Ski", value: "ski", icon: "/icons/ski-option.png" },
+  { label: "Snowboard", value: "snowboard", icon: "/icons/snowboard-option.png" }
 ]
 
 const ukuranBajuOptions = [
@@ -39,7 +39,8 @@ const ukuranBajuOptions = [
 ]
 
 const ukuranSepatuOptions = [
-  "250", "255", "260", "265", "270", "275"
+  "170", "180", "190", "200", "210", "220", "230", "240", "250", 
+  "260", "270", "280", "290", "300", "310", "320"
 ]
 
 interface PesertaFormProps {
@@ -215,24 +216,32 @@ export default function PesertaForm({
                 )}
               </div>
 
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor={`tipeAlat_${index}`}>Tipe Alat</Label>
-                <Select
-                  disabled={isLoading}
-                  value={peserta.tipeAlat}
-                  onValueChange={(value) => onPesertaChange(index, 'tipeAlat', value)}
-                >
-                  <SelectTrigger id={`tipeAlat_${index}`}>
-                    <SelectValue placeholder="Pilih Tipe Alat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tipeAlatOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4 col-span-2">
+                <Label>Tipe Alat</Label>
+                <div className="grid grid-cols-2 gap-6">
+                  {tipeAlatOptions.map(option => (
+                    <Card 
+                      key={option.value}
+                      className={`cursor-pointer p-0 m-0 mt-0 transition-all hover:border-primary overflow-hidden ${
+                        peserta.tipeAlat === option.value ? 'border-2 border-primary bg-accent/50' : ''
+                      }`}
+                      onClick={() => !isLoading && onPesertaChange(index, 'tipeAlat', option.value)}
+                    >
+                      <CardContent className="p-0 mt-0">
+                        <div className="relative aspect-[4/3] w-full">
+                          <img 
+                            src={option.icon} 
+                            alt={option.label} 
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-1 text-center">
+                          <h3 className="text-sm">{option.label}</h3>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
                 {errors[`tipeAlat_${index}`] && (
                   <p className="text-sm text-red-500">{errors[`tipeAlat_${index}`]}</p>
                 )}
