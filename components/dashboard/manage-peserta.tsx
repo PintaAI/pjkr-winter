@@ -37,11 +37,17 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { QrCode, Search } from "lucide-react"
+import { QrCode, Search, MoreVertical, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatWon } from "@/lib/utils"
 import { getPesertaData, updatePeserta, deletePeserta, getBusData } from "@/app/actions/dashboard"
 import { PesertaCard } from "./peserta-card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface PesertaForm {
   name: string
@@ -73,6 +79,7 @@ export function ManagePeserta() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPeserta, setSelectedPeserta] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -222,11 +229,11 @@ export function ManagePeserta() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead className="hidden sm:table-cell">Tiket</TableHead>
-              <TableHead>Bus</TableHead>
+              <TableHead className="w-[200px]">Nama</TableHead>
+              <TableHead className="hidden md:table-cell">Tiket</TableHead>
+              <TableHead className="hidden sm:table-cell">Bus</TableHead>
               <TableHead className="hidden sm:table-cell">Total Biaya</TableHead>
-              <TableHead>Aksi</TableHead>
+              <TableHead className="w-[60px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -240,12 +247,15 @@ export function ManagePeserta() {
                   <TableCell className="font-medium">
                     <button
                       onClick={() => handleShowCard(p)}
-                      className="hover:underline focus:outline-none"
+                      className="hover:underline focus:outline-none text-left"
                     >
                       {p.name}
+                      <div className="text-sm text-muted-foreground md:hidden">
+                        {p.bus?.namaBus || 'No Bus'}
+                      </div>
                     </button>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">
+                  <TableCell className="hidden md:table-cell">
                     {p.tiket?.map((t: any) => (
                       <Badge
                         key={t.id}
@@ -256,7 +266,7 @@ export function ManagePeserta() {
                       </Badge>
                     ))}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {p.bus ? (
                       <Badge variant="outline">
                         {p.bus.namaBus}
@@ -267,155 +277,46 @@ export function ManagePeserta() {
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">{formatWon(totalCost)}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="h-8 w-8"
-                      >
-                        <Link href={`/peserta/${p.id}/qr`}>
-                          <QrCode className="h-4 w-4" />
-                        </Link>
-                      </Button>
-
-                      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setEditForm({
-                                name: p.name,
-                                email: p.email,
-                                alamat: p.alamat || "",
-                                telepon: p.telepon || "",
-                                busId: p.bus?.id || null,
-                                ukuranBaju: p.ukuranBaju || "",
-                                ukuranSepatu: p.ukuranSepatu || ""
-                              })
-                              setSelectedPesertaId(p.id)
-                              setDialogOpen(true)
-                            }}
-                          >
-                            Edit
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Edit Peserta</DialogTitle>
-                          </DialogHeader>
-                          <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                              <Label>Nama</Label>
-                              <Input
-                                value={editForm?.name || ""}
-                                onChange={(e) => setEditForm(prev => ({
-                                  ...prev!,
-                                  name: e.target.value
-                                }))}
-                                required
-                                disabled={isLoading}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Email</Label>
-                              <Input
-                                type="email"
-                                value={editForm?.email || ""}
-                                onChange={(e) => setEditForm(prev => ({
-                                  ...prev!,
-                                  email: e.target.value
-                                }))}
-                                required
-                                disabled={isLoading}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Alamat</Label>
-                              <Input
-                                value={editForm?.alamat || ""}
-                                onChange={(e) => setEditForm(prev => ({
-                                  ...prev!,
-                                  alamat: e.target.value
-                                }))}
-                                disabled={isLoading}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Telepon</Label>
-                              <Input
-                                value={editForm?.telepon || ""}
-                                onChange={(e) => setEditForm(prev => ({
-                                  ...prev!,
-                                  telepon: e.target.value
-                                }))}
-                                disabled={isLoading}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Bus</Label>
-                              <Select
-                                value={editForm?.busId || "no_bus"}
-                                onValueChange={(value) => setEditForm(prev => ({
-                                  ...prev!,
-                                  busId: value === "no_bus" ? null : value
-                                }))}
-                                disabled={isLoading}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Pilih bus" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="no_bus">Tidak ada bus</SelectItem>
-                                  {buses.map((bus) => (
-                                    <SelectItem 
-                                      key={bus.id} 
-                                      value={bus.id}
-                                      disabled={bus.terisi >= bus.kapasitas && bus.id !== p.bus?.id}
-                                    >
-                                      {bus.namaBus} ({bus.terisi}/{bus.kapasitas})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="flex space-x-2">
-                              <Button 
-                                type="submit"
-                                disabled={isLoading}
-                              >
-                                {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
-                              </Button>
-                              <Button 
-                                type="button" 
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedPesertaId(null)
-                                  setEditForm(null)
-                                  setDialogOpen(false)
-                                }}
-                                disabled={isLoading}
-                              >
-                                Batal
-                              </Button>
-                            </div>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
-
-                      <Button 
-                        variant="destructive"
-                        onClick={() => handleDelete(p.id)}
-                        disabled={isLoading}
-                      >
-                        Hapus
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/peserta/${p.id}/qr`} className="flex items-center">
+                            <QrCode className="h-4 w-4 mr-2" />
+                            <span>QR Code</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setEditForm({
+                              name: p.name,
+                              email: p.email,
+                              alamat: p.alamat || "",
+                              telepon: p.telepon || "",
+                              busId: p.bus?.id || null,
+                              ukuranBaju: p.ukuranBaju || "",
+                              ukuranSepatu: p.ukuranSepatu || ""
+                            });
+                            setSelectedPesertaId(p.id);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          <span>Edit</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(p.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );
