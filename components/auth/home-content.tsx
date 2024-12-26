@@ -29,14 +29,12 @@ export const HeroContent = () => {
       <div className="absolute scale-90 bottom-5 md:bottom-22 left-0 right-0">
         <div className="text-center max-w-xl mx-auto space-y-3 animate-fade-up">
           <h3 className="text-xl  md:text-3xl font-bold">
-            Hai gais,
+          Cinghuyaa!
           </h3>
           <p className="text-sm scale-90 md:text-xl">
-            Yuk gabung bareng kita seru-seruan
-            <br />
-            bermain ski dan snowboard saat musim dingin
-            <br />
-            yang pasti dijamin berkesan dan ga bakal kamu lupain!
+          Kamu udah lama dikorea tapi belum pernah main
+Ski/Snowboard? Kalo gitu ini waktu yang tepat buat main ski bareng Pejuangkorea!
+
           </p>
         </div>
       </div>

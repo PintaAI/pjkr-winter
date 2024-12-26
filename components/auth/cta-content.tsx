@@ -8,12 +8,12 @@ export function CTAContent() {
       <div className="-mt-28 flex flex-col items-center space-y-8">
         {/* Heading */}
         <div className="z-10">
-          <h2 className="text-accent text-3xl font-bold text-center">Tertarik ?</h2>
+          <h2 className="text-accent text-xl font-bold text-center">Siap untuk pengalaman baru berkesan bareng Pejuangkorea?</h2>
         </div>
         
         {/* Price */}
         <div className="z-10">
-          <p className="text-center">harga mulai dari ₩ 40.000,-</p>
+          <p className="text-center">harga mulai dari ₩ 65.000,-</p>
         </div>
 
         {/* Icons */}
@@ -27,7 +27,7 @@ export function CTAContent() {
 
         {/* Join Text */}
         <div className="text-center space-y-2 z-10">
-          <p className="text-xl font-semibold">Langsung aja gabung bareng kita</p>
+          <p className="text-xl font-semibold">Cek juga paket lengkapnya,</p>
           <p className="text-gray-300">klik link daftar di bawah ini!</p>
         </div>
         
