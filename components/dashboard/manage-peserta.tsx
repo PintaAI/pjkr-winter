@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useReducer } from "react"
+import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -13,21 +14,6 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import {
   Drawer,
   DrawerClose,
@@ -36,7 +22,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { QrCode, Search, MoreVertical, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatWon } from "@/lib/utils"
@@ -66,20 +51,78 @@ interface BusData {
   terisi: number
 }
 
+type State = {
+  peserta: any[]
+  filteredPeserta: any[]
+  buses: BusData[]
+  editForm: PesertaForm | null
+  selectedPesertaId: string | null
+  isLoading: boolean
+  dialogOpen: boolean
+  drawerOpen: boolean
+  selectedPeserta: any
+  searchQuery: string
+  actionMenuOpen: string | null
+}
+
+type Action =
+  | { type: 'SET_PESERTA'; payload: any[] }
+  | { type: 'SET_FILTERED_PESERTA'; payload: any[] }
+  | { type: 'SET_BUSES'; payload: BusData[] }
+  | { type: 'SET_EDIT_FORM'; payload: PesertaForm | null }
+  | { type: 'SET_SELECTED_PESERTA_ID'; payload: string | null }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_DIALOG_OPEN'; payload: boolean }
+  | { type: 'SET_DRAWER_OPEN'; payload: boolean }
+  | { type: 'SET_SELECTED_PESERTA'; payload: any }
+  | { type: 'SET_SEARCH_QUERY'; payload: string }
+  | { type: 'SET_ACTION_MENU_OPEN'; payload: string | null }
+
+const initialState: State = {
+  peserta: [],
+  filteredPeserta: [],
+  buses: [],
+  editForm: null,
+  selectedPesertaId: null,
+  isLoading: false,
+  dialogOpen: false,
+  drawerOpen: false,
+  selectedPeserta: null,
+  searchQuery: "",
+  actionMenuOpen: null
+}
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'SET_PESERTA':
+      return { ...state, peserta: action.payload }
+    case 'SET_FILTERED_PESERTA':
+      return { ...state, filteredPeserta: action.payload }
+    case 'SET_BUSES':
+      return { ...state, buses: action.payload }
+    case 'SET_EDIT_FORM':
+      return { ...state, editForm: action.payload }
+    case 'SET_SELECTED_PESERTA_ID':
+      return { ...state, selectedPesertaId: action.payload }
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload }
+    case 'SET_DIALOG_OPEN':
+      return { ...state, dialogOpen: action.payload }
+    case 'SET_DRAWER_OPEN':
+      return { ...state, drawerOpen: action.payload }
+    case 'SET_SELECTED_PESERTA':
+      return { ...state, selectedPeserta: action.payload }
+    case 'SET_SEARCH_QUERY':
+      return { ...state, searchQuery: action.payload }
+    case 'SET_ACTION_MENU_OPEN':
+      return { ...state, actionMenuOpen: action.payload }
+    default:
+      return state
+  }
+}
+
 export function ManagePeserta() {
-  const [peserta, setPeserta] = useState<any[]>([])
-  const [filteredPeserta, setFilteredPeserta] = useState<any[]>([])
-  const [buses, setBuses] = useState<BusData[]>([])
-  const [editForm, setEditForm] = useState<PesertaForm | null>(null)
-  const [selectedPesertaId, setSelectedPesertaId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedPeserta, setSelectedPeserta] = useState<any>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
+  const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
     loadData()
@@ -87,7 +130,7 @@ export function ManagePeserta() {
 
   useEffect(() => {
     filterPeserta()
-  }, [searchQuery, peserta])
+  }, [state.searchQuery, state.peserta])
 
   const loadData = async () => {
     try {
@@ -97,123 +140,114 @@ export function ManagePeserta() {
       ])
 
       if (pesertaResult.success && pesertaResult.data) {
-        setPeserta(pesertaResult.data)
-        setFilteredPeserta(pesertaResult.data)
+        dispatch({ type: 'SET_PESERTA', payload: pesertaResult.data })
+        dispatch({ type: 'SET_FILTERED_PESERTA', payload: pesertaResult.data })
       }
 
       if (busResult.success && busResult.data) {
-        setBuses(busResult.data)
+        dispatch({ type: 'SET_BUSES', payload: busResult.data })
       }
     } catch (error) {
       console.error("Error loading data:", error)
-      setError("Gagal memuat data")
+      toast.error("Gagal memuat data")
     }
   }
 
   const filterPeserta = () => {
-    let filtered = peserta
+    let filtered = state.peserta
 
     // Search filter
-    if (searchQuery) {
+    if (state.searchQuery) {
       filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.email.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+        p.email.toLowerCase().includes(state.searchQuery.toLowerCase())
       )
     }
 
-    setFilteredPeserta(filtered)
+    dispatch({ type: 'SET_FILTERED_PESERTA', payload: filtered })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editForm || !selectedPesertaId) return
+    if (!state.editForm || !state.selectedPesertaId) return
 
-    setIsLoading(true)
-    setError(null)
-    setSuccess(null)
-
+    dispatch({ type: 'SET_LOADING', payload: true })
+    
     try {
-      const result = await updatePeserta(selectedPesertaId, editForm)
+      const result = await updatePeserta(state.selectedPesertaId, state.editForm)
 
       if (result.success) {
-        setSuccess(result.message)
+        toast.success(result.message)
         await loadData()
-        setSelectedPesertaId(null)
-        setEditForm(null)
-        setDialogOpen(false)
+        dispatch({ type: 'SET_SELECTED_PESERTA_ID', payload: null })
+        dispatch({ type: 'SET_EDIT_FORM', payload: null })
+        dispatch({ type: 'SET_DIALOG_OPEN', payload: false })
       } else {
-        setError(result.message)
+        toast.error(result.message)
       }
     } catch (error) {
-      setError("Terjadi kesalahan saat memproses data peserta")
+      toast.error("Terjadi kesalahan saat memproses data peserta")
     } finally {
-      setIsLoading(false)
+      dispatch({ type: 'SET_LOADING', payload: false })
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus peserta ini?")) {
-      return
-    }
+    toast.promise(
+      (async () => {
+        if (!confirm("Apakah Anda yakin ingin menghapus peserta ini?")) {
+          return
+        }
 
-    setIsLoading(true)
-    setError(null)
-    setSuccess(null)
+        dispatch({ type: 'SET_LOADING', payload: true })
 
-    try {
-      const result = await deletePeserta(id)
-      if (result.success) {
-        setSuccess(result.message)
-        await loadData()
-      } else {
-        setError(result.message)
+        try {
+          const result = await deletePeserta(id)
+          if (result.success) {
+            await loadData()
+            return result
+          } else {
+            throw new Error(result.message)
+          }
+        } finally {
+          dispatch({ type: 'SET_LOADING', payload: false })
+        }
+      })(),
+      {
+        loading: 'Menghapus peserta...',
+        success: (result) => result?.message || 'Berhasil menghapus peserta',
+        error: (err) => err?.message || "Terjadi kesalahan saat menghapus peserta"
       }
-    } catch (error) {
-      setError("Terjadi kesalahan saat menghapus peserta")
-    } finally {
-      setIsLoading(false)
-    }
+    )
   }
 
   const handleShowCard = (p: any) => {
-    setSelectedPeserta(p)
-    setDrawerOpen(true)
+    dispatch({ type: 'SET_SELECTED_PESERTA', payload: p })
+    dispatch({ type: 'SET_DRAWER_OPEN', payload: true })
   }
 
   return (
     <div className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {success && (
-        <Alert>
-          <AlertDescription>{success}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Search Section */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
         <Input
           placeholder="Cari nama atau email..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={state.searchQuery}
+          onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: e.target.value })}
           className="pl-10"
         />
       </div>
 
       {/* Drawer untuk PesertaCard */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <Drawer open={state.drawerOpen} onOpenChange={(open) => dispatch({ type: 'SET_DRAWER_OPEN', payload: open })}>
         <DrawerContent>
           <DrawerHeader className="border-b">
             <DrawerTitle>Detail Peserta</DrawerTitle>
           </DrawerHeader>
           <div className="flex items-center justify-center p-4">
             <div className="w-full max-w-2xl">
-              {selectedPeserta && <PesertaCard peserta={selectedPeserta} />}
+              {state.selectedPeserta && <PesertaCard peserta={state.selectedPeserta} />}
             </div>
           </div>
           <DrawerFooter className="border-t">
@@ -237,7 +271,7 @@ export function ManagePeserta() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPeserta.map((p) => {
+            {state.filteredPeserta.map((p) => {
               const tiketCost = p.tiket?.reduce((acc: number, t: any) => acc + t.harga, 0) || 0;
               const optionalItemsCost = p.optionalItems?.reduce((acc: number, item: any) => acc + item.harga, 0) || 0;
               const totalCost = tiketCost + optionalItemsCost;
@@ -292,7 +326,7 @@ export function ManagePeserta() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            setEditForm({
+                            dispatch({ type: 'SET_EDIT_FORM', payload: {
                               name: p.name,
                               email: p.email,
                               alamat: p.alamat || "",
@@ -300,9 +334,9 @@ export function ManagePeserta() {
                               busId: p.bus?.id || null,
                               ukuranBaju: p.ukuranBaju || "",
                               ukuranSepatu: p.ukuranSepatu || ""
-                            });
-                            setSelectedPesertaId(p.id);
-                            setDialogOpen(true);
+                            }});
+                            dispatch({ type: 'SET_SELECTED_PESERTA_ID', payload: p.id });
+                            dispatch({ type: 'SET_DIALOG_OPEN', payload: true });
                           }}
                         >
                           <Pencil className="h-4 w-4 mr-2" />

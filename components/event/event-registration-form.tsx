@@ -14,6 +14,7 @@ import BusForm, { BusData } from './bus-form'
 import OptionalItemForm, { OptionalItemData } from './optional-item-form'
 import SummaryForm from './summary-form'
 import { Badge } from '../ui/badge'
+import { Phone, PhoneIcon } from 'lucide-react'
 
 // Simple spinner component
 function Spinner() {
@@ -361,6 +362,15 @@ export default function EventRegistrationForm() {
               {isLoading && <Spinner />}
               {isLoading ? 'Memproses...' : 'Daftar Sekarang'}
             </Button>
+            <p className='text-sm'>note : jika terjadi masalah atau kesulitan dalam mendaftar silahkan hubungi admin di             
+              <PhoneIcon className="w-4 h-4 inline ml-2 border p-1 rounded-full" /><a 
+              href="https://wa.me/6285728212056" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-secondary font-bold hover:underline"
+            >
+              WhatsApp
+            </a></p>
           </div>
         </form>
       )}
