@@ -79,7 +79,7 @@ export const AuthForm = ({ mode = "login" }: AuthFormProps) => {
     <Tabs defaultValue={mode} className="w-full max-w-md mx-auto">
       <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="login">Login</TabsTrigger>
-        <TabsTrigger value="register">Register</TabsTrigger>
+        
       </TabsList>
       
       <TabsContent value="login">
