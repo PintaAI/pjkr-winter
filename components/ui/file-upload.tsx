@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { IconUpload } from "@tabler/icons-react";
+import { IconUpload, IconX } from "@tabler/icons-react";
 import { useDropzone } from "react-dropzone";
 
 const mainVariant = {
@@ -27,15 +27,129 @@ const secondaryVariant = {
 
 export const FileUpload = ({
   onChange,
+  onUpload,
+  value,
 }: {
   onChange?: (files: File[]) => void;
+  onUpload?: (url: string) => void;
+  value?: string;
 }) => {
   const [files, setFiles] = useState<File[]>([]);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(value || null);
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (newFiles: File[]) => {
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    onChange && onChange(newFiles);
+  useEffect(() => {
+    // Set initial preview if value exists
+    if (value) {
+      setPreview(value);
+      setUploadedUrl(value);
+    }
+  }, [value]);
+
+  // Cleanup preview URL when component unmounts or when preview changes
+  useEffect(() => {
+    return () => {
+      if (preview && preview !== value && !preview.startsWith('http')) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview, value]);
+
+  const handleFileChange = async (newFiles: File[]) => {
+    const validFiles = newFiles.filter(file => {
+      if (file.size > MAX_FILE_SIZE) {
+        alert("Ukuran file tidak boleh lebih dari 2MB");
+        return false;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert("Hanya file gambar yang diperbolehkan");
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      try {
+        // Create preview URL for the new file
+        const fileUrl = URL.createObjectURL(validFiles[0]);
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('file', validFiles[0]);
+        formData.append('pathname', `uploads/${Date.now()}-${validFiles[0].name}`);
+        
+        // If there's an existing uploaded URL, include it for deletion
+        if (uploadedUrl) {
+          formData.append('oldUrl', uploadedUrl);
+        }
+
+        // Upload the file
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Upload failed');
+        }
+
+        const data = await response.json();
+
+        // Cleanup old preview URL if it's not the initial value
+        if (preview && preview !== value && !preview.startsWith('http')) {
+          URL.revokeObjectURL(preview);
+        }
+
+        setFiles(validFiles);
+        setPreview(fileUrl);
+        setUploadedUrl(data.url);
+        onChange && onChange(validFiles);
+        onUpload && onUpload(data.url);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('Gagal mengupload file. Silakan coba lagi.');
+      }
+    }
+  };
+
+  const handleRemoveFile = async () => {
+    if (!uploadedUrl) return;
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: uploadedUrl }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete file');
+      }
+
+      // Cleanup preview URL if it's not the initial value
+      if (preview && preview !== value && !preview.startsWith('http')) {
+        URL.revokeObjectURL(preview);
+      }
+
+      setFiles([]);
+      setPreview(null);
+      setUploadedUrl(null);
+      onChange && onChange([]);
+      onUpload && onUpload('');
+      
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      alert('Gagal menghapus file. Silakan coba lagi.');
+    }
   };
 
   const handleClick = () => {
@@ -62,6 +176,7 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
+          accept="image/*"
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
@@ -126,7 +241,28 @@ export const FileUpload = ({
                   </div>
                 </motion.div>
               ))}
-            {!files.length && (
+            {preview && (
+              <div className="mb-4 relative w-full max-w-xs mx-auto group">
+                <img 
+                  src={preview} 
+                  alt="Preview" 
+                  className="w-full h-auto rounded-lg shadow-md"
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile();
+                  }}
+                  className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <IconX className="h-4 w-4" />
+                </button>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                  <p className="text-white text-sm">Klik untuk mengganti gambar</p>
+                </div>
+              </div>
+            )}
+            {!files.length && !preview && (
               <motion.div
                 layoutId="file-upload"
                 variants={mainVariant}
@@ -155,7 +291,7 @@ export const FileUpload = ({
               </motion.div>
             )}
 
-            {!files.length && (
+            {!files.length && !preview && (
               <motion.div
                 variants={secondaryVariant}
                 className="absolute opacity-0 border-2 border-dashed border-accent inset-0 z-30 bg-transparent flex items-center justify-center h-32 mt-4 w-full max-w-[8rem] mx-auto rounded-md"
