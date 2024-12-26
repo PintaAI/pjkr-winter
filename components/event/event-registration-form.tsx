@@ -234,6 +234,17 @@ export default function EventRegistrationForm() {
               <PesertaQR key={`${peserta.id}-${index}`} peserta={peserta} />
             ))}
           </div>
+          <p className="text-center text-muted-foreground">
+            Jika tidak bisa mengunduh tiket, silakan screenshot atau hubungi kami melalui{" "}
+            <a 
+              href="https://wa.me/6285728212056" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              WhatsApp
+            </a>
+          </p>
           <div className="flex justify-center">
             <Button
               onClick={() => {
