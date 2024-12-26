@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
       moduleIdStrategy: 'deterministic',
     },
   },
+  images: {
+    domains: ['vpjfu6qg4hmwclu9.public.blob.vercel-storage.com'],
+  },
 };
 
 const config = withPWA({

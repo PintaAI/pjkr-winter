@@ -30,7 +30,7 @@ export default function OptionalItemForm({
         <h2 className="text-lg font-semibold">ITEM TAMBAHAN</h2>
         <Badge variant="secondary" className="text-xs">Opsional</Badge>
       </div>
-      <p className="text-sm text-gray-500 ml-3">Pilih item tambahan yang lo butuhin</p>
+      <p className="text-sm text-gray-500 ml-3">Pilih item tambahan yang kamu butuhin</p>
       <div className="flex flex-col lg:flex-row gap-4">
         {optionalItemData.map((item) => {
           const isSelected = selectedIds.includes(item.id)

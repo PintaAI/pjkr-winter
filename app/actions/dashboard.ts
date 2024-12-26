@@ -16,7 +16,8 @@ export async function getPesertaData() {
         tiket: true,
         optionalItems: true,
         bus: true,
-        status: true
+        status: true,
+        registration: true
       }
     })
 
@@ -36,7 +37,8 @@ export async function getPesertaData() {
         bus: p.bus,
         status: p.status,
         tipeAlat: p.tipeAlat,
-        createdAt: p.createdAt
+        createdAt: p.createdAt,
+        registration: p.registration // Include registration data instead of buktiPembayaran
       }))
     }
   } catch (error) {

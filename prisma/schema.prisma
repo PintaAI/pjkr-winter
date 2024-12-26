@@ -20,34 +20,50 @@ enum UserPlan {
   PRO
 }
 
+// Model untuk grup registrasi
+model Registration {
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  buktiPembayaran String?   // URL bukti pembayaran, optional until confirmed
+  totalAmount     Float     // Total pembayaran
+  status          String    @default("PENDING") // PENDING, CONFIRMED, REJECTED
+  ticketType      String    // Tipe tiket untuk registrasi ini
+  optionalItems   String[]  // Item opsional yang dipilih
+  busId           String?   // Bus yang dipilih
+  notes           String?   // Catatan tambahan
+  peserta        User[]    // Relasi dengan peserta
+}
+
 model User {
-  id                    String    @id @default(cuid())
-  name                  String?
-  email                 String    @unique
-  emailVerified        DateTime?
-  image                 String?
-  password              String?
-  role                  UserRole  @default(PESERTA)
-  plan                  UserPlan  @default(FREE)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  alamat                String?
-  telepon               String?
-  ukuranBaju            String?   // Ukuran pakaian (S/M/L/XL/XXL atau custom)
-  ukuranSepatu          String?   // Ukuran sepatu (250-275 atau custom)
-  tipeAlat              String?   // Tipe alat (ski/snowboard)
-  buktiPembayaran       String?   // Bukti pembayaran
+  id              String    @id @default(cuid())
+  name            String?
+  email           String    @unique
+  emailVerified   DateTime?
+  image           String?
+  password        String?
+  role            UserRole  @default(PESERTA)
+  plan            UserPlan  @default(FREE)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  alamat          String?
+  telepon         String?
+  ukuranBaju      String?   // Ukuran pakaian (S/M/L/XL/XXL atau custom)
+  ukuranSepatu    String?   // Ukuran sepatu (250-275 atau custom)
+  tipeAlat        String?   // Tipe alat (ski/snowboard)
   
   // Relasi yang sudah ada
-  accounts Account[]
-  sessions Session[]
+  accounts        Account[]
+  sessions        Session[]
 
   // Relasi baru
-  tiket   Ticket[]
-  optionalItems  OptionalItem[]
-  bus     Bus?     @relation(fields: [busId], references: [id])
-  busId   String?
-  status  StatusPeserta[] // Relasi dengan status peserta
+  tiket           Ticket[]
+  optionalItems   OptionalItem[]
+  bus             Bus?      @relation(fields: [busId], references: [id])
+  busId           String?
+  status          StatusPeserta[] // Relasi dengan status peserta
+  registration    Registration?   @relation(fields: [registrationId], references: [id])
+  registrationId  String?
 }
 
 model Account {

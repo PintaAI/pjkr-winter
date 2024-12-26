@@ -16,6 +16,7 @@ interface EventRegistrationData {
   ticketType: string
   optionalItems: string[]
   busId: string | ""
+  buktiPembayaran: string | null
 }
 
 // Mengambil data bus dari database
@@ -95,7 +96,15 @@ export async function getOptionalItemData() {
 
 export async function registerEvent(data: EventRegistrationData) {
   try {
-    const { peserta, ticketType, optionalItems, busId } = data
+    const { peserta, ticketType, optionalItems, busId, buktiPembayaran } = data
+    
+    console.log('Starting registration with data:', {
+      pesertaCount: peserta.length,
+      ticketType,
+      optionalItems,
+      busId,
+      hasBuktiPembayaran: !!buktiPembayaran
+    })
 
     // Cek kapasitas bus jika dipilih
     if (busId) {
@@ -132,80 +141,95 @@ export async function registerEvent(data: EventRegistrationData) {
       return { success: false, message: 'Tipe tiket tidak valid' }
     }
 
-    interface OptionalItemConfig {
-      id: string
-      namaItem: string
-      harga: number
-      deskripsi: string[]
-    }
+    // Hitung total amount
+    const totalAmount = ticketConfig.harga * peserta.length
 
-    // Ambil konfigurasi item opsional jika ada
-    let optionalItemConfigs: OptionalItemConfig[] = []
-    if (optionalItems.length > 0) {
-      optionalItemConfigs = await db.optionalItem.findMany({
-        where: {
-          id: {
-            in: optionalItems
-          },
-          peserta: {
-            role: "PANITIA"
+    // Buat registration group dengan peserta yang sudah ada
+    const existingPeserta = await Promise.all(
+      peserta.map(async p => {
+        const existing = await db.user.findFirst({
+          where: {
+            OR: [
+              { email: p.email },
+              { telepon: p.phone }
+            ]
           }
-        }
+        });
+        return existing ? { ...p, id: existing.id } : p;
       })
-    }
+    );
 
-    const createdUsers = []
-
-    // Proses setiap peserta
-    for (const p of peserta) {
-      // Cek apakah email atau nomor telepon sudah terdaftar
-      let user = await db.user.findFirst({
-        where: {
-          OR: [
-            { email: p.email },
-            { telepon: p.phone }
-          ]
+    // Buat registration group dengan nested create/connect untuk peserta
+    const registration = await db.registration.create({
+      data: {
+        buktiPembayaran,
+        totalAmount,
+        ticketType,
+        optionalItems,
+        busId,
+        status: "PENDING",
+        peserta: {
+          connectOrCreate: peserta.map(p => ({
+            where: { email: p.email },
+            create: {
+              name: p.name,
+              email: p.email,
+              telepon: p.phone,
+              alamat: p.address,
+              ukuranBaju: p.ukuranBaju,
+              ukuranSepatu: p.ukuranSepatu,
+              role: "PESERTA",
+              plan: "FREE",
+              busId: busId || null
+            }
+          }))
         }
-      })
-
-      if (user && user.email === p.email && user.telepon !== p.phone) {
-        return { success: false, message: 'Email sudah terdaftar dengan nomor telepon lain' }
+      },
+      include: {
+        peserta: true
       }
+    })
+    
+    console.log('Created registration record:', {
+      registrationId: registration.id,
+      status: registration.status,
+      totalAmount,
+      ticketType,
+      optionalItems,
+      busId
+    })
 
-      if (user) {
-        // Update user yang sudah ada
-        user = await db.user.update({
-          where: { id: user.id },
-          data: {
-            name: p.name,
-            email: p.email,
-            alamat: p.address,
-            ukuranBaju: p.ukuranBaju,
-            ukuranSepatu: p.ukuranSepatu,
-            busId: busId || null
-          }
-        })
-      } else {
-        // Buat user baru
-        user = await db.user.create({
-          data: {
-            name: p.name,
-            email: p.email,
-            telepon: p.phone,
-            alamat: p.address,
-            ukuranBaju: p.ukuranBaju,
-            ukuranSepatu: p.ukuranSepatu,
-            role: "PESERTA",
-            plan: "FREE",
-            busId: busId || null
-          }
-        })
+    // Verify registration was created
+    const verifyRegistration = await db.registration.findUnique({
+      where: { id: registration.id },
+      include: { peserta: true }
+    })
+    
+    if (!verifyRegistration) {
+      console.error('Failed to create registration record')
+      return { success: false, message: 'Gagal membuat registrasi' }
+    }
+    
+    console.log('Verified registration exists:', {
+      registrationId: verifyRegistration.id,
+      pesertaCount: verifyRegistration.peserta.length
+    })
+
+  
+
+    // Proses setiap peserta dari hasil registration
+    const createdUsers = []
+    for (const p of peserta) {
+      const registeredUser = registration.peserta.find(u => u.email === p.email)
+      if (!registeredUser) {
+        console.error('User not found in registration result:', p.email)
+        continue
       }
 
       // Cek apakah peserta sudah memiliki tiket dengan tipe yang sama
       const existingTicket = await db.ticket.findFirst({
         where: {
-          pesertaId: user.id,
+          pesertaId: registeredUser.id,
           tipe: ticketType
         }
       })
@@ -218,35 +242,48 @@ export async function registerEvent(data: EventRegistrationData) {
             harga: ticketConfig.harga,
             description: ticketConfig.description,
             features: ticketConfig.features,
-            pesertaId: user.id,
+            pesertaId: registeredUser.id,
           },
         })
       }
 
-      // Cek dan buat item opsional untuk peserta jika belum ada
-      for (const item of optionalItemConfigs) {
-        const existingItem = await db.optionalItem.findFirst({
+      // Cek dan buat item opsional untuk peserta
+      if (optionalItems.length > 0) {
+        const optionalItemConfigs = await db.optionalItem.findMany({
           where: {
-            pesertaId: user.id,
-            namaItem: item.namaItem
+            id: {
+              in: optionalItems
+            },
+            peserta: {
+              role: "PANITIA"
+            }
           }
         })
 
-        if (!existingItem) {
-          await db.optionalItem.create({
-            data: {
-              namaItem: item.namaItem,
-              harga: item.harga,
-              deskripsi: item.deskripsi,
-              pesertaId: user.id,
-            },
+        for (const item of optionalItemConfigs) {
+          const existingItem = await db.optionalItem.findFirst({
+            where: {
+              pesertaId: registeredUser.id,
+              namaItem: item.namaItem
+            }
           })
+
+          if (!existingItem) {
+            await db.optionalItem.create({
+              data: {
+                namaItem: item.namaItem,
+                harga: item.harga,
+                deskripsi: item.deskripsi,
+                pesertaId: registeredUser.id,
+              },
+            })
+          }
         }
       }
 
       // Cek status yang sudah ada
       const existingStatuses = await db.statusPeserta.findMany({
-        where: { pesertaId: user.id }
+        where: { pesertaId: registeredUser.id }
       })
 
       // Definisi status yang diperlukan
@@ -281,13 +318,13 @@ export async function registerEvent(data: EventRegistrationData) {
               nilai: status.nilai,
               tanggal: new Date(),
               keterangan: status.keterangan,
-              pesertaId: user.id
+              pesertaId: registeredUser.id
             }
           })
         }
       }
 
-      createdUsers.push(user)
+      createdUsers.push(registeredUser)
     }
 
     // Get bus name if bus was selected
@@ -303,6 +340,30 @@ export async function registerEvent(data: EventRegistrationData) {
       jenisTiket: ticketType,
       namaBus: busName || 'Tidak memilih bus'
     }));
+
+    // Final verification of registration and users
+    const finalRegistration = await db.registration.findUnique({
+      where: { id: registration.id },
+      include: { peserta: true }
+    })
+
+    console.log('Final registration state:', {
+      registrationId: finalRegistration?.id,
+      expectedPesertaCount: peserta.length,
+      actualPesertaCount: finalRegistration?.peserta.length,
+      pesertaEmails: finalRegistration?.peserta.map(p => p.email)
+    })
+
+    if (!finalRegistration || finalRegistration.peserta.length !== peserta.length) {
+      console.error('Registration verification failed:', {
+        expected: peserta.length,
+        actual: finalRegistration?.peserta.length
+      })
+      return { 
+        success: false, 
+        message: 'Terjadi kesalahan dalam verifikasi registrasi' 
+      }
+    }
 
     return { 
       success: true, 

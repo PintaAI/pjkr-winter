@@ -5,6 +5,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getPesertaData } from "@/app/actions/dashboard"
 import { useEffect, useState } from "react"
 import { UserPlan } from "@prisma/client"
+import Image from "next/image"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+
+interface Registration {
+  id: string
+  buktiPembayaran: string | null
+  status: string
+  totalAmount: number
+  ticketType: string
+  createdAt: Date
+}
 
 interface User {
   id: string
@@ -21,6 +33,14 @@ interface User {
   status: any[]
   tipeAlat: string | null
   createdAt: Date
+  registration: Registration | null
+}
+
+// Helper function to check payment status
+const hasPembayaranStatus = (status: any[], registration: Registration | null) => {
+  const statusVerified = status.some(s => s.nama === "Pembayaran" && s.nilai === true)
+  const registrationConfirmed = registration?.status === "CONFIRMED"
+  return statusVerified || registrationConfirmed
 }
 
 export function ManageRegistrationLogs() {
@@ -53,13 +73,15 @@ export function ManageRegistrationLogs() {
   }
 
   return (
-    <ScrollArea className="h-[600px] rounded-md border">
+    <ScrollArea className="h-[900px] rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Nama</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Tanggal Registrasi</TableHead>
+            <TableHead>Status Pembayaran</TableHead>
+            <TableHead>Bukti Pembayaran</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -75,6 +97,40 @@ export function ManageRegistrationLogs() {
                   hour: '2-digit',
                   minute: '2-digit'
                 })}
+              </TableCell>
+              <TableCell>
+                <Badge variant={hasPembayaranStatus(user.status, user.registration) ? "success" : "destructive"}>
+                  {hasPembayaranStatus(user.status, user.registration) ? "Terverifikasi" : "Belum Terverifikasi"}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                {user.registration?.buktiPembayaran ? (
+                  <Dialog>
+                    <DialogTrigger>
+                      <div className="relative w-10 h-10 cursor-pointer hover:opacity-80">
+                        <Image
+                          src={user.registration.buktiPembayaran}
+                          alt="Bukti Pembayaran"
+                          fill
+                          className="object-cover rounded-md"
+                        />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl">
+                      <DialogTitle className="mb-4">Bukti Pembayaran</DialogTitle>
+                      <div className="relative w-full h-[500px]">
+                        <Image
+                          src={user.registration.buktiPembayaran}
+                          alt="Bukti Pembayaran"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                ) : (
+                  <span className="text-muted-foreground">Belum upload</span>
+                )}
               </TableCell>
             </TableRow>
           ))}

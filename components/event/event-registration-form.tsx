@@ -230,8 +230,8 @@ export default function EventRegistrationForm() {
         <div className="space-y-8 max-w-7xl mx-auto py-4 sm:py-8 px-4">
           <h2 className="text-2xl font-bold text-center mb-6">Tiket Anda</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {registeredPeserta.map((peserta) => (
-              <PesertaQR key={peserta.id} peserta={peserta} />
+            {registeredPeserta.map((peserta, index) => (
+              <PesertaQR key={`${peserta.id}-${index}`} peserta={peserta} />
             ))}
           </div>
           <div className="flex justify-center">
@@ -309,7 +309,7 @@ export default function EventRegistrationForm() {
                 <div className="space-y-4">
                   <div className="space-y-4">
                     <div className="flex flex-col space-y-2">
-                      <p className="text-sm text-gray-500">Silahkan Transfer ke:</p>
+                      <p className="text-sm text-gray-500">Silahkan Transfer ke total harga pembayaran ke:</p>
                       <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
                         <div>
                           <p className="font-semibold">우리 Bank</p>
