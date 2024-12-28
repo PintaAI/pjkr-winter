@@ -13,7 +13,7 @@ export function CTAContent() {
         
         {/* Price */}
         <div className="z-10">
-          <p className="text-center">harga mulai dari ₩ 65.000,-</p>
+          <p className="text-center">harga mulai dari ₩ 60.000,-</p>
         </div>
 
         {/* Icons */}
