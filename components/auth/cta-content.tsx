@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -13,7 +12,7 @@ export function CTAContent() {
         
         {/* Price */}
         <div className="z-10">
-          <p className="text-center">harga mulai dari ₩ 65.000,-</p>
+          <p className="text-center">harga mulai dari ₩ 60.000,-</p>
         </div>
 
         {/* Icons */}
