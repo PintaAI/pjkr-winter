@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { registerEvent, getBusData, getTicketData, getOptionalItemData } from '@/app/actions/event-registration'
 import { useRouter } from 'next/navigation' 
@@ -8,13 +8,15 @@ import { PesertaQR } from '@/components/dashboard/peserta-qr'
 import { FileUpload } from "@/components/ui/file-upload"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Checkbox } from "@/components/ui/checkbox"
 import PesertaForm, { PesertaData } from './peserta-form'
 import TicketForm, { TicketData } from './ticket-form'
 import BusForm, { BusData } from './bus-form'
 import OptionalItemForm, { OptionalItemData } from './optional-item-form'
 import SummaryForm from './summary-form'
+import { TermsAndConditions } from './terms-and-conditions'
 import { Badge } from '../ui/badge'
-import { Phone, PhoneIcon } from 'lucide-react'
+import { PhoneIcon } from 'lucide-react'
 
 // Simple spinner component
 function Spinner() {
@@ -34,6 +36,7 @@ interface FormData {
   optionalItems: string[]
   busId: string | ""
   buktiPembayaran: string | null
+  termsAccepted: boolean
 }
 
 interface RegisteredPeserta {
@@ -67,7 +70,8 @@ const initialFormData: FormData = {
   ticketType: "REGULAR",
   optionalItems: [],
   busId: "",
-  buktiPembayaran: null
+  buktiPembayaran: null,
+  termsAccepted: false
 }
 
 export default function EventRegistrationForm() {
@@ -153,6 +157,10 @@ export default function EventRegistrationForm() {
 
     if (!formData.buktiPembayaran) {
       newErrors['buktiPembayaran'] = 'Bukti pembayaran wajib diunggah!'
+    }
+
+    if (!formData.termsAccepted) {
+      newErrors['terms'] = 'Anda harus menyetujui syarat dan ketentuan!'
     }
 
     setErrors(newErrors)
@@ -332,15 +340,15 @@ export default function EventRegistrationForm() {
                 <Badge variant="default" className="bg-accent rounded-sm text-black">6</Badge>
                 <h2 className="text-lg font-semibold">BUKTI PEMBAYARAN</h2>
               </div>
-              <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+              <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 sm:p-6">
                 <div className="space-y-4">
                   <div className="space-y-4">
                     <div className="flex flex-col space-y-2">
                       <p className="text-sm text-gray-500">Silahkan Transfer ke total harga pembayaran ke:</p>
-                      <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                      <div className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-secondary/50">
                         <div>
                           <p className="font-semibold">우리 Bank</p>
-                          <p className="text-lg font-mono">1002762999866</p>
+                          <p className="text-base sm:text-lg font-mono">1002762999866</p>
                           <p className="text-sm">a/n SAGELLA RORES</p>
                         </div>
                         <Button
@@ -369,15 +377,44 @@ export default function EventRegistrationForm() {
               </div>
             </div>
 
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md -ml-12">
+                <Badge variant="default" className="bg-accent rounded-sm text-black">7</Badge>
+                <h2 className="text-lg font-semibold">SYARAT & KETENTUAN</h2>
+              </div>
+              <div className="space-y-4">
+                <TermsAndConditions />
+                <div className="flex items-start space-x-2 p-2">
+                  <Checkbox
+                    id="terms"
+                    checked={formData.termsAccepted}
+                    onCheckedChange={(checked) => 
+                      setFormData(prev => ({...prev, termsAccepted: checked === true}))
+                    }
+                    className="mt-1"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm leading-tight cursor-pointer"
+                  >
+                    Saya menyetujui syarat dan ketentuan yang berlaku
+                  </label>
+                </div>
+                {errors.terms && (
+                  <p className="text-sm text-destructive px-2">{errors.terms}</p>
+                )}
+              </div>
+            </div>
+
             <Button
               type="submit"
-              className="w-full h-12 sm:h-11 text-base sm:text-sm flex items-center justify-center"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base flex items-center justify-center mt-6"
               disabled={isLoading}
             >
               {isLoading && <Spinner />}
               {isLoading ? 'Memproses...' : 'Daftar Sekarang'}
             </Button>
-            <p className='text-sm'>note : jika terjadi masalah atau kesulitan dalam mendaftar silahkan hubungi admin di             
+            <p className='text-xs sm:text-sm'>note : jika terjadi masalah atau kesulitan dalam mendaftar silahkan hubungi admin di             
               <PhoneIcon className="w-4 h-4 inline ml-2 border p-1 rounded-full" /><a 
               href="https://wa.me/6285728212056" 
               target="_blank" 

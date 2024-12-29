@@ -34,7 +34,6 @@ export const HeroContent = () => {
           <p className="text-sm scale-90 md:text-xl">
           Kamu udah lama dikorea tapi belum pernah main
 Ski/Snowboard? Kalo gitu ini waktu yang tepat buat main ski bareng Pejuangkorea!
-
           </p>
         </div>
       </div>
