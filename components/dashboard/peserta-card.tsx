@@ -36,6 +36,14 @@ interface PesertaCardProps {
   peserta: PesertaWithRelations;
 }
 
+const formatPhoneNumber = (phone: string) => {
+  if (!phone) return "";
+  if (phone.startsWith("010")) {
+    return "82" + phone.slice(1); // 010xxxx -> 8210xxxx
+  }
+  return "62" + phone.slice(1); // 08xxxx -> 628xxxx
+};
+
 export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
   const [peserta, setPeserta] = useState(initialPeserta);
   const [isEditing, setIsEditing] = useState(false);
@@ -209,7 +217,16 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
       <CardContent className="space-y-6">
         <div className="grid gap-2 text-sm text-muted-foreground">
           <p>Email: {peserta.email}</p>
-          <p>Telepon: {peserta.telepon || "-"}</p>
+          <p>Telepon: {peserta.telepon ? (
+            <a 
+              href={`https://wa.me/${formatPhoneNumber(peserta.telepon)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              {peserta.telepon}
+            </a>
+          ) : "-"}</p>
           <p>Alamat: {peserta.alamat || "-"}</p>
           <p>Ukuran Baju: {peserta.ukuranBaju || "-"}</p>
           <p>Ukuran Sepatu: {peserta.ukuranSepatu || "-"}</p>
