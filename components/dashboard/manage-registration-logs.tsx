@@ -17,6 +17,7 @@ interface Registration {
   totalAmount: number
   ticketType: string
   createdAt: Date
+  peserta: User[]
 }
 
 interface User {
@@ -96,7 +97,22 @@ export function ManageRegistrationLogs() {
               </TableCell>
               <TableCell>
                 {user.registration?.totalAmount ? (
-                  <span>Rp {user.registration.totalAmount.toLocaleString('id-ID')}</span>
+                  <div className="flex flex-col">
+                    {user.registration.peserta?.length > 1 ? (
+                      <>
+                        <span>
+                          Rp {Math.floor(user.registration.totalAmount / user.registration.peserta.length).toLocaleString('id-ID')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          (Total Rp {user.registration.totalAmount.toLocaleString('id-ID')} / {user.registration.peserta.length} peserta)
+                        </span>
+                      </>
+                    ) : (
+                      <span>
+                        Rp {user.registration.totalAmount.toLocaleString('id-ID')}
+                      </span>
+                    )}
+                  </div>
                 ) : (
                   '-'
                 )}

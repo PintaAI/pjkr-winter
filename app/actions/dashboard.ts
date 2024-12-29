@@ -17,7 +17,11 @@ export async function getPesertaData() {
         optionalItems: true,
         bus: true,
         status: true,
-        registration: true
+        registration: {
+          include: {
+            peserta: true
+          }
+        }
       }
     })
 
