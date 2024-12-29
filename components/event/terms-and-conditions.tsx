@@ -11,14 +11,16 @@ export function TermsAndConditions() {
         <ScrollArea className="h-[250px] sm:h-[400px] w-full rounded-md">
           <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 text-sm sm:text-base">
             <div className="space-y-2">
-              <p>Peserta wajib tiba di lokasi titik pertemuan sebelum pukul 07.30 pagi untuk memastikan keberangkatan tepat waktu.</p>
-              <p>Peserta diwajibkan membawa dokumen identitas diri yang sah untuk verifikasi jika dibutuhkan.</p>
-              <p>Tiket masuk harus dijaga dengan baik. Kehilangan tiket akan dikenakan denda yang menjadi tanggung jawab peserta.</p>
-              <p>Barang bawaan pribadi adalah tanggung jawab masing-masing peserta. Panitia tidak bertanggung jawab atas kehilangan atau kerusakan barang pribadi.</p>
-              <p>Peserta diharapkan menjaga keselamatan diri sendiri selama acara berlangsung. Panitia tidak bertanggung jawab secara finansial atas kecelakaan atau cedera yang mungkin terjadi.</p>
-              <p>Peserta yang terlambat dan tidak tiba di lokasi keberangkatan sesuai jadwal yang telah ditetapkan akan dianggap batal. Biaya yang telah dibayarkan tidak dapat dikembalikan.</p>
-              <p>Semua peserta wajib mengikuti instruksi panitia selama acara berlangsung demi kelancaran dan keamanan bersama.</p>
-              <p>Peserta diimbau membawa obat-obatan pribadi jika diperlukan untuk keadaan darurat.</p>
+              <ol className="list-decimal pl-4 sm:pl-6 space-y-2">
+                <li>Peserta wajib tiba di lokasi titik pertemuan sebelum pukul 07.30 pagi untuk memastikan keberangkatan tepat waktu.</li>
+                <li>Peserta diwajibkan membawa dokumen identitas diri yang sah untuk verifikasi jika dibutuhkan.</li>
+                <li>Tiket masuk harus dijaga dengan baik. Kehilangan tiket akan dikenakan denda yang menjadi tanggung jawab peserta.</li>
+                <li>Barang bawaan pribadi adalah tanggung jawab masing-masing peserta. Panitia tidak bertanggung jawab atas kehilangan atau kerusakan barang pribadi.</li>
+                <li>Peserta diharapkan menjaga keselamatan diri sendiri selama acara berlangsung. Panitia tidak bertanggung jawab secara finansial atas kecelakaan atau cedera yang mungkin terjadi.</li>
+                <li>Peserta yang terlambat dan tidak tiba di lokasi keberangkatan sesuai jadwal yang telah ditetapkan akan dianggap batal. Biaya yang telah dibayarkan tidak dapat dikembalikan.</li>
+                <li>Semua peserta wajib mengikuti instruksi panitia selama acara berlangsung demi kelancaran dan keamanan bersama.</li>
+                <li>Peserta diimbau membawa obat-obatan pribadi jika diperlukan untuk keadaan darurat.</li>
+              </ol>
             </div>
 
             <div className="space-y-2">

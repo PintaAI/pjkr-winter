@@ -80,26 +80,23 @@ export default function TicketForm({
               onClick={() => onTypeChange(ticket.tipe)}
             >
               <CardContent className="p-4">
-                <div className="flex flex-col gap-2 mb-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-base">{ticket.tipe}</h3>
-                    <Badge 
-                      variant="secondary"
-                      className={cn(
-                        "font-semibold",
-                        isSelected ? "bg-accent hover:bg-accent/90 text-black" : tierProps.badge
-                      )}
-                    >
-                      {formatWon(ticket.harga)}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Medal className={cn("h-4 w-4", tierProps.color)} />
-                    <span className={cn("text-xs font-medium", tierProps.color)}>
-                      {tierProps.label}
-                    </span>
-                  </div>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-base">{ticket.tipe}</h3>
+                <div className="flex items-center gap-2">
+                <Medal className={cn("h-4 w-4", tierProps.color)} />
+                  <Badge 
+                    variant="secondary"
+                    className={cn(
+                      "font-semibold",
+                      isSelected ? "bg-accent hover:bg-accent/90 text-black" : tierProps.badge
+                    )}
+                  >
+                    {formatWon(ticket.harga)}
+                  </Badge>
                 </div>
+              </div>
+
+
                 <p className="text-sm text-muted-foreground mb-3">
                   {ticket.description}
                 </p>
