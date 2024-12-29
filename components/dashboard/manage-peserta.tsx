@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useReducer } from "react"
+import { useEffect, useReducer, useState } from "react"
 import { toast } from "sonner"
 import {
   Table,
@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { getPesertaData } from "@/app/actions/dashboard"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { PesertaCard } from "@/components/dashboard/peserta-card"
 
 type State = {
   peserta: any[]
@@ -47,6 +49,8 @@ function reducer(state: State, action: Action): State {
 
 export function ManagePeserta() {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [selectedPeserta, setSelectedPeserta] = useState<any>(null)
 
   useEffect(() => {
     loadData()
@@ -123,12 +127,18 @@ export function ManagePeserta() {
           <TableBody>
             {state.filteredPeserta.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="font-medium">
-                  {p.name}
-                  <div className="text-sm text-muted-foreground">
-                    {p.email}
-                  </div>
-                </TableCell>
+              <TableCell 
+                className="font-medium cursor-pointer hover:bg-muted/50"
+                onClick={() => {
+                  setSelectedPeserta(p)
+                  setIsDrawerOpen(true)
+                }}
+              >
+                {p.name}
+                <div className="text-sm text-muted-foreground">
+                  {p.email}
+                </div>
+              </TableCell>
                 <TableCell>
                   {p.tiket?.map((t: any) => {
                     let variant: "secondary" | "default" | "destructive" | "success" | "outline" = "secondary";
@@ -183,6 +193,19 @@ export function ManagePeserta() {
           </TableBody>
         </Table>
       </div>
+
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Detail Peserta</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4">
+            {selectedPeserta && (
+              <PesertaCard peserta={selectedPeserta} />
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   )
 }
