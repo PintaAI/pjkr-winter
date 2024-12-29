@@ -9,6 +9,7 @@ interface PesertaData {
   address: string
   ukuranBaju: string
   ukuranSepatu: string
+  tipeAlat: string
 }
 
 interface EventRegistrationData {
@@ -103,7 +104,11 @@ export async function registerEvent(data: EventRegistrationData) {
       ticketType,
       optionalItems,
       busId,
-      hasBuktiPembayaran: !!buktiPembayaran
+      hasBuktiPembayaran: !!buktiPembayaran,
+      pesertaDetails: peserta.map(p => ({
+        name: p.name,
+        tipeAlat: p.tipeAlat // Log tipeAlat for each peserta
+      }))
     })
 
     // Cek kapasitas bus jika dipilih
@@ -144,22 +149,38 @@ export async function registerEvent(data: EventRegistrationData) {
     // Hitung total amount
     const totalAmount = ticketConfig.harga * peserta.length
 
-    // Buat registration group dengan peserta yang sudah ada
-    const existingPeserta = await Promise.all(
+    // Buat registration group dengan nested create/connect untuk peserta dan update data yang sudah ada
+    // Update existing users first
+    await Promise.all(
       peserta.map(async p => {
-        const existing = await db.user.findFirst({
-          where: {
-            OR: [
-              { email: p.email },
-              { telepon: p.phone }
-            ]
+        await db.user.upsert({
+          where: { email: p.email },
+          create: {
+            name: p.name,
+            email: p.email,
+            telepon: p.phone,
+            alamat: p.address,
+            ukuranBaju: p.ukuranBaju,
+            ukuranSepatu: p.ukuranSepatu,
+            tipeAlat: p.tipeAlat,
+            role: "PESERTA",
+            plan: "FREE",
+            busId: busId || null
+          },
+          update: {
+            name: p.name,
+            telepon: p.phone,
+            alamat: p.address,
+            ukuranBaju: p.ukuranBaju,
+            ukuranSepatu: p.ukuranSepatu,
+            tipeAlat: p.tipeAlat,
+            busId: busId || null
           }
-        });
-        return existing ? { ...p, id: existing.id } : p;
+        })
       })
-    );
+    )
 
-    // Buat registration group dengan nested create/connect untuk peserta
+    // Create registration and connect users
     const registration = await db.registration.create({
       data: {
         buktiPembayaran,
@@ -169,20 +190,7 @@ export async function registerEvent(data: EventRegistrationData) {
         busId,
         status: "PENDING",
         peserta: {
-          connectOrCreate: peserta.map(p => ({
-            where: { email: p.email },
-            create: {
-              name: p.name,
-              email: p.email,
-              telepon: p.phone,
-              alamat: p.address,
-              ukuranBaju: p.ukuranBaju,
-              ukuranSepatu: p.ukuranSepatu,
-              role: "PESERTA",
-              plan: "FREE",
-              busId: busId || null
-            }
-          }))
+          connect: peserta.map(p => ({ email: p.email }))
         }
       },
       include: {
@@ -337,6 +345,7 @@ export async function registerEvent(data: EventRegistrationData) {
       email: user.email,
       ukuranSepatu: user.ukuranSepatu || '',
       ukuranBaju: user.ukuranBaju || '',
+      tipeAlat: user.tipeAlat || '',
       jenisTiket: ticketType,
       namaBus: busName || 'Tidak memilih bus'
     }));
@@ -346,6 +355,12 @@ export async function registerEvent(data: EventRegistrationData) {
       where: { id: registration.id },
       include: { peserta: true }
     })
+
+    // Log final peserta details including tipeAlat
+    console.log('Final peserta details:', finalRegistration?.peserta.map(p => ({
+      name: p.name,
+      tipeAlat: p.tipeAlat
+    })))
 
     console.log('Final registration state:', {
       registrationId: finalRegistration?.id,

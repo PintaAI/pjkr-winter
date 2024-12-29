@@ -2,8 +2,9 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getPesertaData } from "@/app/actions/dashboard"
+import { getPesertaData, updateStatusPeserta } from "@/app/actions/dashboard"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { UserPlan } from "@prisma/client"
 import Image from "next/image"
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -99,7 +100,33 @@ export function ManageRegistrationLogs() {
                 })}
               </TableCell>
               <TableCell>
-                <Badge variant={hasPembayaranStatus(user.status, user.registration) ? "success" : "destructive"}>
+                <Badge 
+                  variant={hasPembayaranStatus(user.status, user.registration) ? "success" : "destructive"}
+                  className="cursor-pointer hover:opacity-80"
+                  onClick={async () => {
+                    try {
+                      const currentStatus = hasPembayaranStatus(user.status, user.registration)
+                      const result = await updateStatusPeserta(user.id, "Pembayaran", !currentStatus)
+                      
+                      if (result.success) {
+                        // Refresh data
+                        const response = await getPesertaData()
+                        if (response.success && response.data) {
+                          const sortedUsers = [...response.data].sort((a, b) => 
+                            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                          )
+                          setUsers(sortedUsers as User[])
+                        }
+                        toast.success("Status pembayaran berhasil diperbarui")
+                      } else {
+                        toast.error("Gagal memperbarui status pembayaran")
+                      }
+                    } catch (error) {
+                      console.error("Error updating payment status:", error)
+                      toast.error("Terjadi kesalahan saat memperbarui status")
+                    }
+                  }}
+                >
                   {hasPembayaranStatus(user.status, user.registration) ? "Terverifikasi" : "Belum Terverifikasi"}
                 </Badge>
               </TableCell>
