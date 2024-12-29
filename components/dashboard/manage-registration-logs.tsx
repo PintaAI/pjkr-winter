@@ -78,8 +78,8 @@ export function ManageRegistrationLogs() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nama</TableHead>
-            <TableHead>Email</TableHead>
+            <TableHead>Informasi Peserta</TableHead>
+            <TableHead>Total Pembayaran</TableHead>
             <TableHead>Tanggal Registrasi</TableHead>
             <TableHead>Status Pembayaran</TableHead>
             <TableHead>Bukti Pembayaran</TableHead>
@@ -88,8 +88,19 @@ export function ManageRegistrationLogs() {
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
-              <TableCell>{user.name || '-'}</TableCell>
-              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <div className="flex flex-col space-y-1">
+                  <span className="font-medium">{user.name || '-'}</span>
+                  <span className="text-sm text-muted-foreground">{user.email}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                {user.registration?.totalAmount ? (
+                  <span>Rp {user.registration.totalAmount.toLocaleString('id-ID')}</span>
+                ) : (
+                  '-'
+                )}
+              </TableCell>
               <TableCell>
                 {new Date(user.createdAt).toLocaleDateString('id-ID', {
                   day: 'numeric',

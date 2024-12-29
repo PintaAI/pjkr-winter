@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { User, Bus, Ticket, OptionalItem, StatusPeserta, UserRole } from "@prisma/client";
 import { updateStatusPeserta, updatePeserta } from "@/app/actions/dashboard";
 import { toast } from "sonner";
-import { Check, X, Edit } from "lucide-react";
+import { Check, X, Edit, QrCode } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -106,7 +106,18 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {peserta.name || ""}
-            <Dialog open={isEditing} onOpenChange={setIsEditing}>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                asChild
+              >
+                <a href={`/peserta/${peserta.id}/qr`} target="_blank">
+                  <QrCode className="h-4 w-4" />
+                </a>
+              </Button>
+              <Dialog open={isEditing} onOpenChange={setIsEditing}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Edit className="h-4 w-4" />
@@ -207,6 +218,7 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
           <Badge variant={peserta.role === UserRole.PANITIA ? "destructive" : "default"}>
             {peserta.role}
