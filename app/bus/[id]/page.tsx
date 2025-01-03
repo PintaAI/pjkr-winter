@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { useParams, useRouter } from "next/navigation"
 import { getBusDetail } from "@/app/actions/dashboard"
 import { UserRole } from "@prisma/client"
 
@@ -14,6 +14,8 @@ interface User {
   role: UserRole
   alamat: string | null
   telepon: string | null
+  tipeAlat?: 'Snowboard' | 'Ski'
+  makanBerat?: boolean
 }
 
 interface Bus {
@@ -25,6 +27,7 @@ interface Bus {
 
 export default function BusDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const [bus, setBus] = useState<Bus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -77,49 +80,78 @@ export default function BusDetailPage() {
   return (
     <div className="container mx-auto py-8">
       <Card>
-        <CardHeader>
-          <CardTitle>{bus.namaBus}</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            Kapasitas: {bus.peserta.length}/{bus.kapasitas} penumpang
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{bus.namaBus}</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Kapasitas {bus.peserta.length}/{bus.kapasitas} penumpang
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                router.push(`/scan?type=departure&busId=${bus.id}`)
+              }}
+            >
+              Absensi Keberangkatan
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                router.push(`/scan?type=return&busId=${bus.id}`)
+              }}
+            >
+              Absensi Kepulangan
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {bus.peserta.map((peserta) => (
-                <Card key={peserta.id}>
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="font-medium text-lg">
-                          {peserta.name || "Tanpa Nama"}
-                        </h3>
-                        <div className="text-sm text-muted-foreground">{peserta.email}</div>
-                      </div>
-
-                      <div className="space-y-2">
-                        {peserta.telepon && (
-                          <div className="text-sm flex items-center gap-2">
-                            <span>📞</span>
-                            <span>{peserta.telepon}</span>
-                          </div>
-                        )}
-                        {peserta.alamat && (
-                          <div className="text-sm flex items-center gap-2">
-                            <span>📍</span>
-                            <span>{peserta.alamat}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <Badge variant="secondary">
-                        {peserta.role === UserRole.PESERTA ? 'Peserta' : 'Panitia'}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <div className="relative w-full overflow-auto">
+            <table className="w-full caption-bottom text-sm">
+              <thead className="[&_tr]:border-b">
+                <tr className="border-b transition-colors">
+                  <th className="h-12 px-4 text-left align-middle font-medium">NAMA</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">PHONE</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">STATUS</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">TIPE ALAT</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">MAKAN BERAT</th>
+                </tr>
+              </thead>
+              <tbody className="[&_tr:last-child]:border-0">
+                {bus.peserta.map((peserta) => (
+                  <tr key={peserta.id} className="border-b transition-colors hover:bg-muted/50">
+                    <td className="p-4 align-middle">{peserta.name || "Tanpa Nama"}</td>
+                    <td className="p-4 align-middle">{peserta.telepon || "-"}</td>
+                    <td className="p-4 align-middle">
+                      {peserta.role === UserRole.PESERTA ? 'Peserta' : 'Panitia'}
+                    </td>
+                    <td className="p-4 align-middle">{peserta.tipeAlat || "-"}</td>
+                    <td className="p-4 align-middle">
+                      {peserta.makanBerat ? (
+                        <span className="text-green-500">✓</span>
+                      ) : (
+                        <span className="text-red-500">✗</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {/* Fill remaining rows up to capacity */}
+                {Array(bus.kapasitas - bus.peserta.length)
+                  .fill(null)
+                  .map((_, index) => (
+                    <tr key={`empty-${index}`} className="border-b transition-colors hover:bg-muted/50">
+                      <td className="p-4 align-middle">-</td>
+                      <td className="p-4 align-middle">-</td>
+                      <td className="p-4 align-middle">-</td>
+                      <td className="p-4 align-middle">-</td>
+                      <td className="p-4 align-middle">-</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
