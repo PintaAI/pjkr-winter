@@ -13,9 +13,6 @@ import {
   DrawerTitle,
 } from "../ui/drawer";
 
-// Configure QR Scanner worker path
-QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
-
 type PesertaWithRelations = User & {
   bus: Bus | null;
   tiket: Ticket[];
@@ -24,10 +21,16 @@ type PesertaWithRelations = User & {
 };
 
 interface QRScannerProps {
-  onScanSuccess?: (data: PesertaWithRelations) => void;
+  type?: 'departure' | 'return';
+  busId?: string;
+  onScanComplete?: (result: {
+    peserta: PesertaWithRelations;
+    success: boolean;
+    message: string;
+  }) => void;
 }
 
-export function QRScanner({ onScanSuccess }: QRScannerProps) {
+export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -77,11 +80,61 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         throw new Error("Gagal mengambil data peserta");
       }
 
-      const data = await response.json();
-      setPeserta(data);
+      const pesertaData = await response.json();
+      setPeserta(pesertaData);
       setDrawerOpen(true);
-      onScanSuccess?.(data);
-      toast.success("Data peserta berhasil ditemukan");
+
+      // If we're in preview mode (no type/busId), just return success
+      if (!type || !busId) {
+        onScanComplete?.({
+          peserta: pesertaData,
+          success: true,
+          message: 'QR Code berhasil dipindai'
+        });
+        toast.success("Data peserta berhasil ditemukan");
+        return;
+      }
+
+      // If we have type/busId, update attendance
+      try {
+        const attendanceResponse = await fetch('/api/attendance/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pesertaId: pesertaData.id,
+            type,
+            busId
+          }),
+        });
+
+        if (!attendanceResponse.ok) {
+          throw new Error("Gagal memperbarui status kehadiran");
+        }
+
+        const result = await attendanceResponse.json();
+        
+        onScanComplete?.({
+          peserta: pesertaData,
+          success: result.success,
+          message: result.message
+        });
+
+        if (result.success) {
+          toast.success(result.message);
+        } else {
+          toast.error(result.message);
+        }
+      } catch (error) {
+        console.error("Error updating attendance:", error);
+        onScanComplete?.({
+          peserta: pesertaData,
+          success: false,
+          message: 'Gagal memproses absensi'
+        });
+        toast.error("Gagal memproses absensi");
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Gagal memproses QR code");
@@ -124,7 +177,7 @@ export function QRScanner({ onScanSuccess }: QRScannerProps) {
         qrScannerRef.current.destroy();
       }
     };
-  }, [onScanSuccess]);
+  }, [onScanComplete]);
 
   // Effect untuk mengontrol scanner berdasarkan status drawer
   useEffect(() => {
