@@ -81,11 +81,11 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
       }
 
       const pesertaData = await response.json();
-      setPeserta(pesertaData);
-      setDrawerOpen(true);
-
-      // If we're in preview mode (no type/busId), just return success
+      
+      // If we're in preview mode (no type/busId), show drawer and return success
       if (!type || !busId) {
+        setPeserta(pesertaData);
+        setDrawerOpen(true);
         onScanComplete?.({
           peserta: pesertaData,
           success: true,
@@ -150,6 +150,9 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
     const startScanner = async () => {
       try {
         // Create QR Scanner instance
+        // Set worker path before creating scanner instance
+        QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
+        
         qrScannerRef.current = new QrScanner(
           videoElem,
           async (result: QrScanner.ScanResult) => {
@@ -159,7 +162,8 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
             highlightScanRegion: true,
             highlightCodeOutline: true,
             maxScansPerSecond: 5,
-            preferredCamera: 'environment',
+            // Let browser choose best available camera
+            returnDetailedScanResult: true
           }
         );
 

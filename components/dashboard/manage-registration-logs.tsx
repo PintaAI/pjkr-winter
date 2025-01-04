@@ -1,6 +1,5 @@
 "use client"
 
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getPesertaData, updateStatusPeserta } from "@/app/actions/dashboard"
 import { useEffect, useState } from "react"
@@ -75,7 +74,7 @@ export function ManageRegistrationLogs() {
   }
 
   return (
-    <ScrollArea className="h-[900px] rounded-md border">
+    <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -190,6 +189,6 @@ export function ManageRegistrationLogs() {
           ))}
         </TableBody>
       </Table>
-    </ScrollArea>
+    </div>
   )
 }
