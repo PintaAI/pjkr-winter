@@ -5,7 +5,8 @@ import QrScanner from "qr-scanner";
 import { toast } from "sonner";
 import { PesertaCard } from "./peserta-card";
 import { User, Bus, Ticket, StatusPeserta, OptionalItem } from "@prisma/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "../ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -33,6 +34,7 @@ interface QRScannerProps {
 export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
@@ -123,6 +125,10 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
 
         if (result.success) {
           toast.success(result.message);
+          setNeedsRefresh(true);
+          if (qrScannerRef.current) {
+            qrScannerRef.current.pause();
+          }
         } else {
           toast.error(result.message);
         }
@@ -193,11 +199,29 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
 
   return (
     <div className="space-y-4">
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full max-w-sm mx-auto relative">
         <video 
           ref={videoRef}
           className="w-full aspect-square object-cover"
         />
+        {needsRefresh && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2"
+              onClick={() => {
+                if (qrScannerRef.current) {
+                  qrScannerRef.current.start();
+                }
+                setNeedsRefresh(false);
+              }}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Scan Lagi
+            </Button>
+          </div>
+        )}
       </div>
 
       {isLoading && (
