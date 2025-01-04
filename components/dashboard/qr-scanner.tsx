@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import QrScanner from "qr-scanner";
 import { toast } from "sonner";
 import { PesertaCard } from "./peserta-card";
@@ -32,6 +33,7 @@ interface QRScannerProps {
 }
 
 export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
+  const router = useRouter();
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [needsRefresh, setNeedsRefresh] = useState(false);
@@ -211,10 +213,10 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
               size="lg"
               className="gap-2"
               onClick={() => {
-                if (qrScannerRef.current) {
-                  qrScannerRef.current.start();
-                }
-                setNeedsRefresh(false);
+                // Refresh the entire page
+                router.refresh();
+                // Force a hard reload if needed
+                window.location.reload();
               }}
             >
               <RefreshCw className="h-4 w-4" />
