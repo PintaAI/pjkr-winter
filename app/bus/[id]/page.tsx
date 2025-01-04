@@ -7,6 +7,21 @@ import { useParams, useRouter } from "next/navigation"
 import { getBusDetail } from "@/app/actions/dashboard"
 import { UserRole } from "@prisma/client"
 
+interface StatusPeserta {
+  id: string
+  nama: string
+  nilai: boolean
+  tanggal: string | null
+  keterangan: string | null
+}
+
+interface OptionalItem {
+  id: string
+  namaItem: string
+  harga: number
+  deskripsi: string[]
+}
+
 interface User {
   id: string
   name: string | null
@@ -15,7 +30,8 @@ interface User {
   alamat: string | null
   telepon: string | null
   tipeAlat?: 'Snowboard' | 'Ski'
-  makanBerat?: boolean
+  optionalItems: OptionalItem[]
+  status: StatusPeserta[]
 }
 
 interface Bus {
@@ -78,18 +94,19 @@ export default function BusDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <CardTitle>{bus.namaBus}</CardTitle>
             <p className="text-sm text-muted-foreground">
               Kapasitas {bus.peserta.length}/{bus.kapasitas} penumpang
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button 
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation()
                 router.push(`/scan?type=departure&busId=${bus.id}`)
@@ -99,6 +116,7 @@ export default function BusDetailPage() {
             </Button>
             <Button 
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation()
                 router.push(`/scan?type=return&busId=${bus.id}`)
@@ -109,7 +127,85 @@ export default function BusDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full overflow-auto">
+          {/* Mobile View - Cards */}
+          <div className="block sm:hidden space-y-4">
+            {bus.peserta.map((peserta) => (
+              <Card key={peserta.id}>
+                <CardContent className="pt-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{peserta.name || "Tanpa Nama"}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {peserta.role === UserRole.PESERTA ? 'Peserta' : 'Panitia'}
+                      </span>
+                    </div>
+                    <div className="text-sm space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Phone:</span>
+                        <span>{peserta.telepon || "-"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tipe Alat:</span>
+                        <span>{peserta.tipeAlat || "-"}</span>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-muted-foreground">Optional Items:</span>
+                        <div className="pl-2">
+                          {peserta.optionalItems.length > 0 ? (
+                            peserta.optionalItems.map((item) => (
+                              <div key={item.id} className="flex justify-between">
+                                <span>{item.namaItem}</span>
+                                <span className="text-green-500">✓</span>
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Status Section */}
+                    {peserta.status && peserta.status.length > 0 && (
+                      <div className="border-t pt-3">
+                        <h4 className="font-medium mb-2">Status</h4>
+                        <div className="space-y-2">
+                          {peserta.status.map((status) => (
+                            <div key={status.id} className="flex justify-between items-center text-sm">
+                              <span className="text-muted-foreground">{status.nama}:</span>
+                              <div className="flex items-center gap-2">
+                                <span className={status.nilai ? "text-green-500" : "text-red-500"}>
+                                  {status.nilai ? "✓" : "✗"}
+                                </span>
+                                {status.tanggal && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(status.tanggal).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {Array(bus.kapasitas - bus.peserta.length)
+              .fill(null)
+              .map((_, index) => (
+                <Card key={`empty-mobile-${index}`}>
+                  <CardContent className="py-4">
+                    <div className="text-center text-muted-foreground">
+                      Kursi Kosong
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+
+          {/* Desktop View - Table */}
+          <div className="hidden sm:block relative w-full overflow-auto">
             <table className="w-full caption-bottom text-sm">
               <thead className="[&_tr]:border-b">
                 <tr className="border-b transition-colors">
@@ -117,7 +213,8 @@ export default function BusDetailPage() {
                   <th className="h-12 px-4 text-left align-middle font-medium">PHONE</th>
                   <th className="h-12 px-4 text-left align-middle font-medium">STATUS</th>
                   <th className="h-12 px-4 text-left align-middle font-medium">TIPE ALAT</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium">MAKAN BERAT</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">OPTIONAL ITEMS</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium">STATUS PESERTA</th>
                 </tr>
               </thead>
               <tbody className="[&_tr:last-child]:border-0">
@@ -130,19 +227,37 @@ export default function BusDetailPage() {
                     </td>
                     <td className="p-4 align-middle">{peserta.tipeAlat || "-"}</td>
                     <td className="p-4 align-middle">
-                      {peserta.makanBerat ? (
-                        <span className="text-green-500">✓</span>
-                      ) : (
-                        <span className="text-red-500">✗</span>
-                      )}
+                      <div className="space-y-1">
+                        {peserta.optionalItems.length > 0 ? (
+                          peserta.optionalItems.map((item) => (
+                            <div key={item.id} className="flex items-center gap-1">
+                              
+                              <span className="text-green-500">✓</span>
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 align-middle">
+                      {peserta.status?.map((status, index) => (
+                        <div key={status.id} className="flex items-center gap-1 text-sm">
+                          {index > 0 && <span className="text-muted-foreground mx-1">•</span>}
+                          <span className="text-muted-foreground">{status.nama}:</span>
+                          <span className={status.nilai ? "text-green-500" : "text-red-500"}>
+                            {status.nilai ? "✓" : "✗"}
+                          </span>
+                        </div>
+                      ))}
                     </td>
                   </tr>
                 ))}
-                {/* Fill remaining rows up to capacity */}
                 {Array(bus.kapasitas - bus.peserta.length)
                   .fill(null)
                   .map((_, index) => (
                     <tr key={`empty-${index}`} className="border-b transition-colors hover:bg-muted/50">
+                      <td className="p-4 align-middle">-</td>
                       <td className="p-4 align-middle">-</td>
                       <td className="p-4 align-middle">-</td>
                       <td className="p-4 align-middle">-</td>

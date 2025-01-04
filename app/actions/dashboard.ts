@@ -453,6 +453,17 @@ export async function getBusDetail(id: string) {
             role: true,
             alamat: true,
             telepon: true,
+            tipeAlat: true,
+            optionalItems: true,
+            status: {
+              select: {
+                id: true,
+                nama: true,
+                nilai: true,
+                tanggal: true,
+                keterangan: true
+              }
+            }
           },
         },
       },
