@@ -185,8 +185,11 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
 
   // Effect untuk mengontrol scanner berdasarkan status drawer
   useEffect(() => {
-    handleScannerControl(drawerOpen);
-  }, [drawerOpen]);
+    // Only control scanner with drawer in preview mode
+    if (!type && !busId) {
+      handleScannerControl(drawerOpen);
+    }
+  }, [drawerOpen, type, busId]);
 
   return (
     <div className="space-y-4">
