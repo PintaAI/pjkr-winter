@@ -146,8 +146,10 @@ export default function EventRegistrationForm() {
       } else if (!validateEmail(peserta.email, index)) {
         newErrors[`email_${index}`] = 'Email sudah digunakan oleh peserta lain!'
       }
-      if (!peserta.phone.match(/^[0-9]{8,}$/)) {
-        newErrors[`phone_${index}`] = 'Nomor telepon minimal 8 digit angka!'
+      if (!peserta.phone.trim()) {
+        newErrors[`phone_${index}`] = 'Nomor telepon wajib diisi!'
+      } else if (!peserta.phone.match(/^[0-9]+$/)) {
+        newErrors[`phone_${index}`] = 'Nomor telepon hanya boleh berisi angka!'
       }
       if (!peserta.name.trim()) newErrors[`name_${index}`] = 'Nama wajib diisi ya!'
       if (!peserta.address.trim()) newErrors[`address_${index}`] = 'Alamat jangan kosong dong!'
