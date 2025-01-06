@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Bus, Ticket, OptionalItem, StatusPeserta, UserRole } from "@prisma/client";
-import { updateStatusPeserta, updatePeserta } from "@/app/actions/dashboard";
+import { updateStatusPeserta, updatePeserta, getBusData } from "@/app/actions/dashboard";
 import { toast } from "sonner";
 import { Check, X, Edit, QrCode } from "lucide-react";
 import {
@@ -47,6 +47,7 @@ const formatPhoneNumber = (phone: string) => {
 export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
   const [peserta, setPeserta] = useState(initialPeserta);
   const [isEditing, setIsEditing] = useState(false);
+  const [buses, setBuses] = useState<{ id: string; namaBus: string; kapasitas: number; terisi: number }[]>([]);
   const [editForm, setEditForm] = useState({
     name: peserta.name || "",
     email: peserta.email,
@@ -55,11 +56,26 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
     ukuranBaju: peserta.ukuranBaju || "",
     ukuranSepatu: peserta.ukuranSepatu || "",
     tipeAlat: peserta.tipeAlat || "",
-    role: peserta.role
+    role: peserta.role,
+    busId: peserta.bus?.id || "none"
   });
 
+  useEffect(() => {
+    const loadBuses = async () => {
+      const res = await getBusData();
+      if (res.success && res.data) {
+        setBuses(res.data);
+      }
+    };
+    loadBuses();
+  }, []);
+
   const handleEditSubmit = async () => {
-    const res = await updatePeserta(peserta.id, editForm);
+    const formData = {
+      ...editForm,
+      busId: editForm.busId === "none" ? null : editForm.busId
+    };
+    const res = await updatePeserta(peserta.id, formData);
     if (!res.success) {
       toast.error("Gagal memperbarui data peserta");
       return;
@@ -67,7 +83,8 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
 
     setPeserta(prev => ({
       ...prev,
-      ...editForm
+      ...editForm,
+      bus: editForm.busId === "none" ? null : buses.find(b => b.id === editForm.busId) || null
     }));
     setIsEditing(false);
     toast.success("Data peserta berhasil diperbarui");
@@ -204,6 +221,25 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
                       <SelectContent>
                         <SelectItem value={UserRole.PESERTA}>PESERTA</SelectItem>
                         <SelectItem value={UserRole.PANITIA}>PANITIA</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="bus">Bus</Label>
+                    <Select
+                      value={editForm.busId}
+                      onValueChange={(value) => setEditForm(prev => ({ ...prev, busId: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih bus" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Tidak ada bus</SelectItem>
+                        {buses.map((bus) => (
+                          <SelectItem key={bus.id} value={bus.id}>
+                            {bus.namaBus} ({bus.terisi}/{bus.kapasitas})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
