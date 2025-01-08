@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Bus, Ticket, OptionalItem, StatusPeserta, UserRole } from "@prisma/client";
-import { updateStatusPeserta, updatePeserta, getBusData } from "@/app/actions/dashboard";
+import { updateStatusPeserta, updatePeserta, getBusData, getOptionalItemData, addOptionalItemToPeserta, removeOptionalItemFromPeserta } from "@/app/actions/dashboard";
 import { toast } from "sonner";
 import { Check, X, Edit, QrCode } from "lucide-react";
 import {
@@ -48,6 +48,8 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
   const [peserta, setPeserta] = useState(initialPeserta);
   const [isEditing, setIsEditing] = useState(false);
   const [buses, setBuses] = useState<{ id: string; namaBus: string; kapasitas: number; terisi: number }[]>([]);
+  const [isManagingItems, setIsManagingItems] = useState(false);
+  const [optionalItems, setOptionalItems] = useState<{ id: string; namaItem: string; harga: number; deskripsi: string[] }[]>([]);
   const [editForm, setEditForm] = useState({
     name: peserta.name || "",
     email: peserta.email,
@@ -59,6 +61,13 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
     role: peserta.role,
     busId: peserta.bus?.id || "none"
   });
+
+  const loadOptionalItems = useCallback(async () => {
+    const res = await getOptionalItemData();
+    if (res.success && res.data) {
+      setOptionalItems(res.data);
+    }
+  }, []);
 
   useEffect(() => {
     const loadBuses = async () => {
@@ -318,18 +327,79 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
           </div>
         )}
 
-        {peserta.optionalItems.length > 0 && (
-          <div>
-            <h4 className="font-semibold text-base text-primary mb-2">Item Opsional</h4>
-            <div className="flex gap-2 flex-wrap">
-              {peserta.optionalItems.map((item) => (
-                <Badge key={item.id} variant="outline">
-                  {item.namaItem}
-                </Badge>
-              ))}
-            </div>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-base text-primary">Item Opsional</h4>
+            <Dialog open={isManagingItems} onOpenChange={setIsManagingItems}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" onClick={() => {
+                  loadOptionalItems();
+                }}>
+                  Kelola Item
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Kelola Item Opsional</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  {optionalItems.map((item) => {
+                    const isSelected = peserta.optionalItems.some(i => i.id === item.id);
+                    return (
+                      <div key={item.id} className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium">{item.namaItem}</span>
+                          <p className="text-sm text-muted-foreground">Rp {item.harga.toLocaleString()}</p>
+                        </div>
+                        <Button
+                          variant={isSelected ? "destructive" : "default"}
+                          size="sm"
+                          onClick={async () => {
+                            if (isSelected) {
+                              const res = await removeOptionalItemFromPeserta(peserta.id, item.id);
+                              if (res.success) {
+                                setPeserta(prev => ({
+                                  ...prev,
+                                  optionalItems: prev.optionalItems.filter(i => i.id !== item.id)
+                                }));
+                                toast.success(res.message);
+                              } else {
+                                toast.error(res.message);
+                              }
+                            } else {
+                              const res = await addOptionalItemToPeserta(peserta.id, item.id);
+                              if (res.success) {
+                                setPeserta(prev => ({
+                                  ...prev,
+                                  optionalItems: [...prev.optionalItems, {
+                                    ...item,
+                                    pesertaId: peserta.id
+                                  }]
+                                }));
+                                toast.success(res.message);
+                              } else {
+                                toast.error(res.message);
+                              }
+                            }
+                          }}
+                        >
+                          {isSelected ? "Hapus" : "Tambah"}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-        )}
+          <div className="flex gap-2 flex-wrap">
+            {peserta.optionalItems.map((item) => (
+              <Badge key={item.id} variant="outline">
+                {item.namaItem}
+              </Badge>
+            ))}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

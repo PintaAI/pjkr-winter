@@ -605,4 +605,44 @@ export async function getAllStatusTemplates() {
   }
 }
 
-// ... kode lainnya tetap sama ...
+export async function addOptionalItemToPeserta(pesertaId: string, itemId: string) {
+  try {
+    await db.user.update({
+      where: { id: pesertaId },
+      data: {
+        optionalItems: {
+          connect: {
+            id: itemId
+          }
+        }
+      }
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true, message: "Item berhasil ditambahkan" };
+  } catch (error) {
+    console.error("[ADD_OPTIONAL_ITEM_TO_PESERTA_ERROR]", error);
+    return { success: false, message: "Gagal menambahkan item" };
+  }
+}
+
+export async function removeOptionalItemFromPeserta(pesertaId: string, itemId: string) {
+  try {
+    await db.user.update({
+      where: { id: pesertaId },
+      data: {
+        optionalItems: {
+          disconnect: {
+            id: itemId
+          }
+        }
+      }
+    });
+
+    revalidatePath("/dashboard");
+    return { success: true, message: "Item berhasil dihapus" };
+  } catch (error) {
+    console.error("[REMOVE_OPTIONAL_ITEM_FROM_PESERTA_ERROR]", error);
+    return { success: false, message: "Gagal menghapus item" };
+  }
+}
