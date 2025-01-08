@@ -5,6 +5,38 @@ import { revalidatePath } from "next/cache"
 import { UserRole, UserPlan } from "@prisma/client"
 import { auth } from "@/auth"
 
+// Panitia Management Functions
+export async function getPanitiaData() {
+  try {
+    const panitia = await db.user.findMany({
+      where: {
+        role: UserRole.PANITIA
+      },
+      include: {
+        tiket: true,
+        optionalItems: true
+      }
+    })
+
+    return { 
+      success: true, 
+      data: panitia.map(p => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        alamat: p.alamat,
+        telepon: p.telepon,
+        tiket: p.tiket,
+        optionalItems: p.optionalItems,
+        createdAt: p.createdAt
+      }))
+    }
+  } catch (error) {
+    console.error("[GET_PANITIA_DATA_ERROR]", error)
+    return { success: false, message: "Gagal mendapatkan data panitia" }
+  }
+}
+
 // Peserta Management Functions
 export async function getPesertaData() {
   try {

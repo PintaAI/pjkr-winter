@@ -48,13 +48,25 @@ export async function getBusData() {
 // Mengambil data tiket dari database
 export async function getTicketData() {
   try {
+    console.log('Fetching ticket data for admin@admin.com...')
+    
     const tickets = await db.ticket.findMany({
       where: {
         peserta: {
-          role: "PANITIA"
+          role: "PANITIA",
+          email: "aldiyoesuf@gmail.com"
         }
       }
     })
+
+    console.log('Found tickets:', {
+      count: tickets.length,
+      tickets: tickets.map(t => ({
+        tipe: t.tipe,
+        harga: t.harga
+      }))
+    })
+
     return { 
       success: true, 
       data: tickets.map(ticket => ({
@@ -73,12 +85,23 @@ export async function getTicketData() {
 // Mengambil data item opsional dari database
 export async function getOptionalItemData() {
   try {
+    console.log('Fetching optional items data for admin@admin.com...')
+    
     const items = await db.optionalItem.findMany({
       where: {
         peserta: {
-          role: "PANITIA"
+          role: "PANITIA",
+          email: "aldiyoesuf@gmail.com"
         }
       }
+    })
+
+    console.log('Found optional items:', {
+      count: items.length,
+      items: items.map(i => ({
+        namaItem: i.namaItem,
+        harga: i.harga
+      }))
     })
     return { 
       success: true, 
