@@ -58,13 +58,21 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
   }, []);
 
   useEffect(() => {
-    const loadBuses = async () => {
-      const res = await getBusData();
-      if (res.success && res.data) {
-        setBuses(res.data);
+    const loadData = async () => {
+      const [busRes, itemsRes] = await Promise.all([
+        getBusData(),
+        getOptionalItemData()
+      ]);
+      
+      if (busRes.success && busRes.data) {
+        setBuses(busRes.data);
+      }
+      
+      if (itemsRes.success && itemsRes.data) {
+        setOptionalItems(itemsRes.data);
       }
     };
-    loadBuses();
+    loadData();
   }, []);
 
   const handleEditSubmit = async () => {

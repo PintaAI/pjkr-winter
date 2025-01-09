@@ -263,6 +263,11 @@ export function ManagePeserta() {
         </div>
       </div>
 
+      {/* Data Count Indicator */}
+      <div className="text-sm text-muted-foreground">
+        Menampilkan {state.filteredPeserta.length} dari {state.peserta.length} data
+      </div>
+
       {/* Table */}
       <div className="rounded-md border overflow-x-auto">
         <Table>

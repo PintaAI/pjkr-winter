@@ -95,17 +95,62 @@ export async function updatePeserta(id: string, data: {
   tipeAlat?: string
   role?: UserRole
   ticketType?: string
+  optionalItems?: string[]
 }) {
   try {
-    // Start a transaction to update user, ticket, and registration
+    // Start a transaction to update user, ticket, registration, and optional items
     await db.$transaction(async (tx) => {
       // Update user data
-      const userData = { ...data };
-      delete userData.ticketType; // Remove ticketType as it's not a user field
+      const { ticketType, optionalItems, busId, ...userData } = data;
+
+      // Update user with relations
       await tx.user.update({
         where: { id },
-        data: userData
+        data: {
+          ...userData,
+          bus: busId === "none" 
+            ? { disconnect: true }
+            : busId 
+              ? { connect: { id: busId } }
+              : undefined
+        }
       });
+
+      // Handle optional items if provided
+      if (data.optionalItems) {
+        // Get current optional items
+        const user = await tx.user.findUnique({
+          where: { id },
+          include: { optionalItems: true }
+        });
+
+        if (user) {
+          // Delete all current optional items for this user
+          await tx.optionalItem.deleteMany({
+            where: { pesertaId: user.id }
+          });
+
+          // Get template items from panitia
+          const templateItems = await tx.optionalItem.findMany({
+            where: {
+              id: { in: data.optionalItems },
+              peserta: { role: "PANITIA" }
+            }
+          });
+
+          // Create new items for the user based on templates
+          for (const template of templateItems) {
+            await tx.optionalItem.create({
+              data: {
+                namaItem: template.namaItem,
+                harga: template.harga,
+                deskripsi: template.deskripsi,
+                pesertaId: user.id
+              }
+            });
+          }
+        }
+      }
 
       // Update ticket type if provided
       if (data.ticketType) {
@@ -686,14 +731,25 @@ export async function getAllStatusTemplates() {
 
 export async function addOptionalItemToPeserta(pesertaId: string, itemId: string) {
   try {
-    await db.user.update({
-      where: { id: pesertaId },
+    // Get the template item from panitia
+    const templateItem = await db.optionalItem.findFirst({
+      where: {
+        id: itemId,
+        peserta: { role: "PANITIA" }
+      }
+    });
+
+    if (!templateItem) {
+      return { success: false, message: "Item tidak ditemukan" };
+    }
+
+    // Create a new copy of the item for this user
+    await db.optionalItem.create({
       data: {
-        optionalItems: {
-          connect: {
-            id: itemId
-          }
-        }
+        namaItem: templateItem.namaItem,
+        harga: templateItem.harga,
+        deskripsi: templateItem.deskripsi,
+        pesertaId: pesertaId
       }
     });
 
@@ -707,13 +763,12 @@ export async function addOptionalItemToPeserta(pesertaId: string, itemId: string
 
 export async function removeOptionalItemFromPeserta(pesertaId: string, itemId: string) {
   try {
-    await db.user.update({
-      where: { id: pesertaId },
-      data: {
-        optionalItems: {
-          disconnect: {
-            id: itemId
-          }
+    // Delete the specific item from this user
+    await db.optionalItem.deleteMany({
+      where: {
+        pesertaId: pesertaId,
+        namaItem: {
+          equals: (await db.optionalItem.findUnique({ where: { id: itemId } }))?.namaItem
         }
       }
     });
