@@ -92,12 +92,59 @@ export async function updatePeserta(id: string, data: {
   busId?: string | null
   ukuranBaju?: string
   ukuranSepatu?: string
+  tipeAlat?: string
+  role?: UserRole
+  ticketType?: string
 }) {
   try {
-    await db.user.update({
-      where: { id },
-      data
-    })
+    // Start a transaction to update user, ticket, and registration
+    await db.$transaction(async (tx) => {
+      // Update user data
+      const userData = { ...data };
+      delete userData.ticketType; // Remove ticketType as it's not a user field
+      await tx.user.update({
+        where: { id },
+        data: userData
+      });
+
+      // Update ticket type if provided
+      if (data.ticketType) {
+        // Get the first ticket (assuming one ticket per user)
+        const existingTicket = await tx.ticket.findFirst({
+          where: { pesertaId: id }
+        });
+
+        if (existingTicket) {
+          // Update existing ticket
+          await tx.ticket.update({
+            where: { id: existingTicket.id },
+            data: { tipe: data.ticketType }
+          });
+        } else {
+          // Create new ticket
+          await tx.ticket.create({
+            data: {
+              tipe: data.ticketType,
+              harga: 0, // Default price, adjust as needed
+              pesertaId: id
+            }
+          });
+        }
+
+        // Update registration ticketType
+        const user = await tx.user.findUnique({
+          where: { id },
+          include: { registration: true }
+        });
+
+        if (user?.registration) {
+          await tx.registration.update({
+            where: { id: user.registration.id },
+            data: { ticketType: data.ticketType }
+          });
+        }
+      }
+    });
 
     revalidatePath("/dashboard")
     return { success: true, message: "Data peserta berhasil diperbarui" }

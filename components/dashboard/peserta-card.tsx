@@ -5,25 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Bus, Ticket, OptionalItem, StatusPeserta, UserRole } from "@prisma/client";
-import { updateStatusPeserta, updatePeserta, getBusData, getOptionalItemData, addOptionalItemToPeserta, removeOptionalItemFromPeserta } from "@/app/actions/dashboard";
+import { updateStatusPeserta, updatePeserta, getBusData, getOptionalItemData } from "@/app/actions/dashboard";
 import { toast } from "sonner";
-import { Check, X, Edit, QrCode } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Check, X, QrCode } from "lucide-react";
+import { EditPesertaDialog } from "./dialogs/edit-peserta-dialog";
+import { ManageOptionalItemsDialog } from "./dialogs/manage-optional-items-dialog";
 
 type PesertaWithRelations = User & {
   bus: Bus | null;
@@ -59,7 +45,9 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
     ukuranSepatu: peserta.ukuranSepatu || "",
     tipeAlat: peserta.tipeAlat || "",
     role: peserta.role,
-    busId: peserta.bus?.id || "none"
+    busId: peserta.bus?.id || "none",
+    ticketType: peserta.tiket[0]?.tipe || "",
+    optionalItems: peserta.optionalItems.map(item => item.id)
   });
 
   const loadOptionalItems = useCallback(async () => {
@@ -82,7 +70,8 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
   const handleEditSubmit = async () => {
     const formData = {
       ...editForm,
-      busId: editForm.busId === "none" ? null : editForm.busId
+      busId: editForm.busId === "none" ? null : editForm.busId,
+      optionalItems: editForm.optionalItems
     };
     const res = await updatePeserta(peserta.id, formData);
     if (!res.success) {
@@ -90,10 +79,24 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
       return;
     }
 
+    // Map the selected IDs to the original optional items to preserve all fields
+    const updatedOptionalItems = editForm.optionalItems.map(id => 
+      peserta.optionalItems.find(item => item.id === id) || 
+      optionalItems.find(item => item.id === id)!
+    ).filter(Boolean);
+
     setPeserta(prev => ({
       ...prev,
-      ...editForm,
-      bus: editForm.busId === "none" ? null : buses.find(b => b.id === editForm.busId) || null
+      name: editForm.name,
+      email: editForm.email,
+      telepon: editForm.telepon,
+      alamat: editForm.alamat,
+      ukuranBaju: editForm.ukuranBaju,
+      ukuranSepatu: editForm.ukuranSepatu,
+      tipeAlat: editForm.tipeAlat,
+      role: editForm.role,
+      bus: editForm.busId === "none" ? null : buses.find(b => b.id === editForm.busId) || null,
+      optionalItems: updatedOptionalItems as OptionalItem[]
     }));
     setIsEditing(false);
     toast.success("Data peserta berhasil diperbarui");
@@ -143,126 +146,16 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
                   <QrCode className="h-4 w-4" />
                 </a>
               </Button>
-              <Dialog open={isEditing} onOpenChange={setIsEditing}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Data Peserta</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Nama</Label>
-                    <Input
-                      id="name"
-                      value={editForm.name}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={editForm.email}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="telepon">Telepon</Label>
-                    <Input
-                      id="telepon"
-                      value={editForm.telepon}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, telepon: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="alamat">Alamat</Label>
-                    <Input
-                      id="alamat"
-                      value={editForm.alamat}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, alamat: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="ukuranBaju">Ukuran Baju</Label>
-                    <Input
-                      id="ukuranBaju"
-                      value={editForm.ukuranBaju}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, ukuranBaju: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="ukuranSepatu">Ukuran Sepatu</Label>
-                    <Input
-                      id="ukuranSepatu"
-                      value={editForm.ukuranSepatu}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, ukuranSepatu: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="tipeAlat">Tipe Alat</Label>
-                    <Select
-                      value={editForm.tipeAlat}
-                      onValueChange={(value) => setEditForm(prev => ({ ...prev, tipeAlat: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih tipe alat" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ski">Ski</SelectItem>
-                        <SelectItem value="snowboard">Snowboard</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                      value={editForm.role}
-                      onValueChange={(value: UserRole) => setEditForm(prev => ({ ...prev, role: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={UserRole.PESERTA}>PESERTA</SelectItem>
-                        <SelectItem value={UserRole.PANITIA}>PANITIA</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="bus">Bus</Label>
-                    <Select
-                      value={editForm.busId}
-                      onValueChange={(value) => setEditForm(prev => ({ ...prev, busId: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih bus" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Tidak ada bus</SelectItem>
-                        {buses.map((bus) => (
-                          <SelectItem key={bus.id} value={bus.id}>
-                            {bus.namaBus} ({bus.terisi}/{bus.kapasitas})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    Batal
-                  </Button>
-                  <Button onClick={handleEditSubmit}>
-                    Simpan
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+              <EditPesertaDialog
+                isOpen={isEditing}
+                onOpenChange={setIsEditing}
+                editForm={editForm}
+                setEditForm={setEditForm}
+                buses={buses}
+                optionalItems={optionalItems}
+                selectedOptionalItems={peserta.optionalItems.map(item => item.id)}
+                onSubmit={handleEditSubmit}
+              />
             </div>
           </div>
           <Badge variant={peserta.role === UserRole.PANITIA ? "destructive" : "default"}>
@@ -330,67 +223,19 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-semibold text-base text-primary">Item Opsional</h4>
-            <Dialog open={isManagingItems} onOpenChange={setIsManagingItems}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" onClick={() => {
-                  loadOptionalItems();
-                }}>
-                  Kelola Item
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Kelola Item Opsional</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  {optionalItems.map((item) => {
-                    const isSelected = peserta.optionalItems.some(i => i.id === item.id);
-                    return (
-                      <div key={item.id} className="flex items-center justify-between">
-                        <div>
-                          <span className="font-medium">{item.namaItem}</span>
-                          <p className="text-sm text-muted-foreground">Rp {item.harga.toLocaleString()}</p>
-                        </div>
-                        <Button
-                          variant={isSelected ? "destructive" : "default"}
-                          size="sm"
-                          onClick={async () => {
-                            if (isSelected) {
-                              const res = await removeOptionalItemFromPeserta(peserta.id, item.id);
-                              if (res.success) {
-                                setPeserta(prev => ({
-                                  ...prev,
-                                  optionalItems: prev.optionalItems.filter(i => i.id !== item.id)
-                                }));
-                                toast.success(res.message);
-                              } else {
-                                toast.error(res.message);
-                              }
-                            } else {
-                              const res = await addOptionalItemToPeserta(peserta.id, item.id);
-                              if (res.success) {
-                                setPeserta(prev => ({
-                                  ...prev,
-                                  optionalItems: [...prev.optionalItems, {
-                                    ...item,
-                                    pesertaId: peserta.id
-                                  }]
-                                }));
-                                toast.success(res.message);
-                              } else {
-                                toast.error(res.message);
-                              }
-                            }
-                          }}
-                        >
-                          {isSelected ? "Hapus" : "Tambah"}
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </DialogContent>
-            </Dialog>
+            <ManageOptionalItemsDialog
+              isOpen={isManagingItems}
+              onOpenChange={setIsManagingItems}
+              pesertaId={peserta.id}
+              optionalItems={optionalItems}
+              selectedItems={peserta.optionalItems}
+              onItemUpdate={(updatedItems) => {
+                setPeserta(prev => ({
+                  ...prev,
+                  optionalItems: updatedItems
+                }));
+              }}
+            />
           </div>
           <div className="flex gap-2 flex-wrap">
             {peserta.optionalItems.map((item) => (

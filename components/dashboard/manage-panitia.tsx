@@ -11,9 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import { getPanitiaData } from "@/app/actions/dashboard"
+import { Search, Trash2 } from "lucide-react"
+import { getPanitiaData, deletePeserta } from "@/app/actions/dashboard"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PesertaCard } from "@/components/dashboard/peserta-card"
@@ -210,6 +211,7 @@ export function ManagePanitia() {
               <TableHead>Tiket</TableHead>
               <TableHead>Item Tambahan</TableHead>
               <TableHead>Tanggal Bergabung</TableHead>
+              <TableHead className="w-[50px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -246,6 +248,26 @@ export function ManagePanitia() {
                   ) : "-"}
                 </TableCell>
                 <TableCell>{formatDate(p.createdAt)}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-100"
+                    onClick={async () => {
+                      if (window.confirm("Apakah Anda yakin ingin menghapus panitia ini?")) {
+                        const result = await deletePeserta(p.id)
+                        if (result.success) {
+                          toast.success("Panitia berhasil dihapus")
+                          loadData() // Refresh data after deletion
+                        } else {
+                          toast.error(result.message || "Gagal menghapus panitia")
+                        }
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
