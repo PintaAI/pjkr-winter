@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { QrCode, Search, CheckCircle2, Check } from "lucide-react"
+import { QrCode, Search, CheckCircle2, Check, Trash2 } from "lucide-react"
 
 // Helper function to check payment status
 const hasPembayaranStatus = (status: any[], registration: any | null) => {
@@ -20,7 +20,7 @@ const hasPembayaranStatus = (status: any[], registration: any | null) => {
   const registrationConfirmed = registration?.status === "CONFIRMED"
   return statusVerified || registrationConfirmed
 }
-import { getPesertaData } from "@/app/actions/dashboard"
+import { getPesertaData, deletePeserta } from "@/app/actions/dashboard"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { PesertaCard } from "@/components/dashboard/peserta-card"
 import { PesertaQR } from "@/components/dashboard/peserta-qr"
@@ -275,6 +275,7 @@ export function ManagePeserta() {
               <TableHead>Makanan</TableHead>
               <TableHead>Ukuran</TableHead>
               <TableHead className="w-[50px]">QR</TableHead>
+              <TableHead className="w-[50px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -358,15 +359,37 @@ export function ManagePeserta() {
                   </div>
                 </TableCell>
                 <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedPeserta(p)
+                        setIsQRDrawerOpen(true)
+                      }}
+                    >
+                      <QrCode className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      setSelectedPeserta(p)
-                      setIsQRDrawerOpen(true)
+                    className="text-red-500 hover:text-red-700 hover:bg-red-100"
+                    onClick={async () => {
+                      if (window.confirm("Apakah Anda yakin ingin menghapus peserta ini?")) {
+                        const result = await deletePeserta(p.id)
+                        if (result.success) {
+                          toast.success("Peserta berhasil dihapus")
+                          loadData() // Refresh data after deletion
+                        } else {
+                          toast.error(result.message || "Gagal menghapus peserta")
+                        }
+                      }
                     }}
                   >
-                    <QrCode className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>
