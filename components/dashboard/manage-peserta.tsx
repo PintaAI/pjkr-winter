@@ -188,25 +188,25 @@ export function ManagePeserta() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2 sm:p-0">
       {/* Search and Filter Section */}
       <div className="space-y-4">
-        <div className="relative">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <Input
             placeholder="Cari nama atau email..."
             value={state.searchQuery}
             onChange={(e) => dispatch({ type: 'SET_SEARCH_QUERY', payload: e.target.value })}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
         
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
           <Select
             value={state.filterTiket}
             onValueChange={(value) => dispatch({ type: 'SET_FILTER_TIKET', payload: value })}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Filter Tiket" />
             </SelectTrigger>
             <SelectContent>
@@ -221,7 +221,7 @@ export function ManagePeserta() {
             value={state.filterBus}
             onValueChange={(value) => dispatch({ type: 'SET_FILTER_BUS', payload: value })}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Filter Bus" />
             </SelectTrigger>
             <SelectContent>
@@ -236,7 +236,7 @@ export function ManagePeserta() {
             value={state.filterAlat}
             onValueChange={(value) => dispatch({ type: 'SET_FILTER_ALAT', payload: value })}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Filter Alat" />
             </SelectTrigger>
             <SelectContent>
@@ -251,7 +251,7 @@ export function ManagePeserta() {
             value={state.filterOptionalItems}
             onValueChange={(value) => dispatch({ type: 'SET_FILTER_OPTIONAL_ITEMS', payload: value })}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Filter Item Tambahan" />
             </SelectTrigger>
             <SelectContent>
@@ -269,18 +269,18 @@ export function ManagePeserta() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border overflow-x-auto">
+      <div className="rounded-md border overflow-x-auto max-w-[100vw] sm:max-w-full">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Nama</TableHead>
-              <TableHead>Tiket</TableHead>
-              <TableHead>Bus</TableHead>
-              <TableHead>Alat</TableHead>
-              <TableHead>Makanan</TableHead>
-              <TableHead>Ukuran</TableHead>
-              <TableHead className="w-[50px]">QR</TableHead>
-              <TableHead className="w-[50px]">Aksi</TableHead>
+              <TableHead className="min-w-[200px]">Nama</TableHead>
+              <TableHead className="min-w-[150px]">Tiket</TableHead>
+              <TableHead className="min-w-[100px]">Bus</TableHead>
+              <TableHead className="min-w-[100px]">Alat</TableHead>
+              <TableHead className="min-w-[80px]">Makanan</TableHead>
+              <TableHead className="min-w-[120px]">Ukuran</TableHead>
+              <TableHead className="min-w-[50px]">QR</TableHead>
+              <TableHead className="min-w-[50px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -296,9 +296,7 @@ export function ManagePeserta() {
                   <div className="flex items-center gap-2">
                     {p.name}
                     {hasPembayaranStatus(p.status || [], p.registration) && (
-                      
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                      
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
                     )}
                   </div>
                   <div className="text-sm text-muted-foreground">
