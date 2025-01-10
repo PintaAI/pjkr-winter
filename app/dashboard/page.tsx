@@ -15,18 +15,37 @@ import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('peserta');
+
+  // Load saved tab after component mounts
+  useEffect(() => {
+    const savedTab = localStorage.getItem('dashboardTab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem('dashboardTab', value);
+  };
 
   const refreshData = async () => {
     setIsRefreshing(true);
-    // Force a client-side data refetch
-    await fetch(window.location.href, {
-      method: 'GET',
-      headers: {
-        'Cache-Control': 'no-cache'
-      }
-    });
-    window.location.reload();
-    setIsRefreshing(false);
+    try {
+      // Store current tab before refresh
+      localStorage.setItem('dashboardTab', activeTab);
+      // Force a client-side data refetch
+      await fetch(window.location.href, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      window.location.reload();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
   return (
     <div className="max-w-[1200px] mx-auto px-3 sm:px-4 py-6 sm:py-10">
@@ -52,7 +71,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="peserta" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} defaultValue="peserta" className="space-y-6">
         {/* Keeping original tab structure */}
         <TabsList className="grid grid-cols-6 gap-4">
           <TabsTrigger value="panitia" className="flex items-center gap-2">

@@ -5,6 +5,8 @@ import { SessionProvider } from "@/components/providers/session-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
+import { currentUser } from "@/lib/auth";
+import { MobileNavbar } from "@/components/mobile-navbar";
 
 const montserrat = localFont({
   src: '../public/fonts/Montserrat-Regular.ttf',
@@ -43,11 +45,12 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await currentUser();
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${montserrat.variable} ${sinoff.variable} font-montserrat antialiased`}>
@@ -58,8 +61,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider>
-            <div>
+            <div className={user ? "pb-16" : ""}>
               {children}
+              <MobileNavbar />
               <Toaster position="top-center" />
               <Analytics />
             </div>
