@@ -26,7 +26,7 @@ export function MobileNavbar() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-background border-t">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 h-20 bg-background border-t pb-4">
       <div className="grid h-full grid-cols-2">
         {links.map((link) => {
           const Icon = link.icon;

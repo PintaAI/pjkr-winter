@@ -61,9 +61,7 @@ export default function DashboardPage() {
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button asChild className="flex-1 sm:flex-none">
-            <Link href="/scan" className="text-sm sm:text-base">Scan QR Code</Link>
-          </Button>
+    
           <Button asChild className="flex-1 sm:flex-none">
             <Link href="/event-registration" className="text-sm sm:text-base">Daftar Event</Link>
           </Button>
