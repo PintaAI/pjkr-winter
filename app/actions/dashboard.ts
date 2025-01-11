@@ -108,11 +108,7 @@ export async function updatePeserta(id: string, data: {
         where: { id },
         data: {
           ...userData,
-          bus: busId === "none" 
-            ? { disconnect: true }
-            : busId 
-              ? { connect: { id: busId } }
-              : undefined
+          busId: busId === "none" ? null : busId
         }
       });
 
