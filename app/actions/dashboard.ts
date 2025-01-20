@@ -42,7 +42,9 @@ export async function getPesertaData() {
   try {
     const peserta = await db.user.findMany({
       where: {
-        role: UserRole.PESERTA
+        role: {
+          in: [UserRole.PESERTA, UserRole.CREW]
+        }
       },
       include: {
         tiket: true,
@@ -63,6 +65,7 @@ export async function getPesertaData() {
         id: p.id,
         name: p.name,
         email: p.email,
+        role: p.role,
         plan: p.plan,
         alamat: p.alamat,
         telepon: p.telepon,
@@ -566,25 +569,13 @@ export async function getBusDetail(id: string) {
       where: { id },
       include: {
         peserta: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            alamat: true,
-            telepon: true,
-            tipeAlat: true,
+          include: {
+            tiket: true,
             optionalItems: true,
-            status: {
-              select: {
-                id: true,
-                nama: true,
-                nilai: true,
-                tanggal: true,
-                keterangan: true
-              }
-            }
-          },
+            status: true,
+            bus: true,
+            registration: true
+          }
         },
       },
     })
@@ -613,7 +604,9 @@ export async function createStatusTemplate(nama: string, keterangan?: string) {
   try {
     const peserta = await db.user.findMany({
       where: {
-        role: UserRole.PESERTA
+        role: {
+          in: [UserRole.PESERTA, UserRole.CREW]
+        }
       }
     });
 

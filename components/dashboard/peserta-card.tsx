@@ -166,7 +166,7 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
               />
             </div>
           </div>
-          <Badge variant={peserta.role === UserRole.PANITIA ? "destructive" : "default"}>
+          <Badge variant={peserta.role === UserRole.PANITIA || peserta.role === UserRole.CREW ? "destructive" : "default"}>
             {peserta.role}
           </Badge>
         </CardTitle>

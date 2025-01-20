@@ -13,6 +13,7 @@ datasource db {
 enum UserRole {
   PESERTA
   PANITIA
+  CREW
 }
 
 enum UserPlan {

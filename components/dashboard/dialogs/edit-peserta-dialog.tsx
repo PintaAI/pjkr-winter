@@ -158,6 +158,7 @@ export function EditPesertaDialog({
               <SelectContent>
                 <SelectItem value={UserRole.PESERTA}>PESERTA</SelectItem>
                 <SelectItem value={UserRole.PANITIA}>PANITIA</SelectItem>
+                <SelectItem value={UserRole.CREW}>CREW</SelectItem>
               </SelectContent>
             </Select>
           </div>

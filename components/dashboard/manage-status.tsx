@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash } from "lucide-react";
+import { Plus, Pencil, Trash, Users, Ticket, Package, } from "lucide-react";
 import { toast } from "sonner";
 import { 
   createStatusTemplate, 
@@ -31,6 +31,9 @@ import {
   getPesertaData 
 } from "@/app/actions/dashboard";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { IconSkateboard, IconSkateboarding, IconBus, IconClock, IconProgress, IconArrowUpRight, IconPlaneArrival, IconPlaneDeparture } from "@tabler/icons-react";
 
 interface StatusTemplate {
   nama: string;
@@ -48,6 +51,10 @@ interface RegistrationStats {
   };
   optionalItemsCount: {
     [key: string]: number;
+  };
+  sizeStats: {
+    baju: { [size: string]: number };
+    sepatu: { [size: string]: number };
   };
 }
 
@@ -69,6 +76,12 @@ interface StatusStats {
       last7d: number;
     };
   };
+}
+
+interface Status {
+  nama: string;
+  nilai: boolean;
+  tanggal?: Date;
 }
 
 export function ManageStatus() {
@@ -121,7 +134,11 @@ export function ManageStatus() {
             ski: 0,
             snowboard: 0
           },
-          optionalItemsCount: {}
+          optionalItemsCount: {},
+          sizeStats: {
+            baju: {},
+            sepatu: {}
+          }
         };
 
         // Initialize status stats
@@ -149,8 +166,18 @@ export function ManageStatus() {
               (regStats.optionalItemsCount[item.namaItem] || 0) + 1;
           });
 
+          // Count clothing and shoe sizes
+          if (p.ukuranBaju) {
+            regStats.sizeStats.baju[p.ukuranBaju] = 
+              (regStats.sizeStats.baju[p.ukuranBaju] || 0) + 1;
+          }
+          if (p.ukuranSepatu) {
+            regStats.sizeStats.sepatu[p.ukuranSepatu] = 
+              (regStats.sizeStats.sepatu[p.ukuranSepatu] || 0) + 1;
+          }
+
           // Status statistics
-          p.status.forEach(s => {
+          (p.status as Status[]).forEach(s => {
             // Completion rates
             if (!stats.completionRates[s.nama]) {
               stats.completionRates[s.nama] = { completed: 0, percentage: 0 };
@@ -254,7 +281,10 @@ export function ManageStatus() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Kelola Status Peserta</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog 
+          open={open} 
+          onOpenChange={setOpen}
+        >
           <DialogTrigger asChild>
             <Button className="shadow-sm">
               <Plus className="w-4 h-4 mr-2" />
@@ -303,20 +333,32 @@ export function ManageStatus() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Registration Overview */}
           <div className="p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-semibold mb-6">Statistik Pendaftaran</h3>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Statistik Pendaftaran
+            </h3>
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Total Pendaftar</span>
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Total Pendaftar
+                </span>
                 <span className="text-lg font-semibold">{registrationStats.totalPeserta}</span>
               </div>
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold">Pemilihan Alat</h4>
                 <div className="flex justify-between text-sm">
-                  <span>Ski</span>
+                  <span className="flex items-center gap-2">
+                    <IconSkateboard className="w-4 h-4" />
+                    Ski
+                  </span>
                   <span className="font-medium">{registrationStats.equipmentCount.ski} peserta</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Snowboard</span>
+                  <span className="flex items-center gap-2">
+                    <IconSkateboarding className="w-4 h-4" />
+                    Snowboard
+                  </span>
                   <span className="font-medium">{registrationStats.equipmentCount.snowboard} peserta</span>
                 </div>
               </div>
@@ -325,7 +367,10 @@ export function ManageStatus() {
 
           {/* Ticket Breakdown */}
           <div className="p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-semibold mb-6">Pemilihan Tiket</h3>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <Ticket className="w-5 h-5" />
+              Pemilihan Tiket
+            </h3>
             <div className="space-y-4">
               {Object.entries(registrationStats.ticketBreakdown).map(([type, count]) => (
                 <div key={type} className="flex justify-between text-sm">
@@ -338,7 +383,10 @@ export function ManageStatus() {
 
           {/* Optional Items */}
           <div className="p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-semibold mb-6">Item Tambahan</h3>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Item Tambahan
+            </h3>
             <div className="space-y-4">
               {Object.entries(registrationStats.optionalItemsCount).map(([item, count]) => (
                 <div key={item} className="flex justify-between text-sm">
@@ -349,38 +397,124 @@ export function ManageStatus() {
             </div>
           </div>
 
-          {/* Status Progress */}
-          {statusStats && (
-            <div className="p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow col-span-full lg:col-span-2">
-              <h3 className="text-lg font-semibold mb-6">Progress Status</h3>
-              <div className="grid gap-6">
-                {Object.entries(statusStats.completionRates).map(([status, data]) => (
-                  <div key={status} className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-medium">{status}</span>
-                      <span>{Math.round(data.percentage)}% ({data.completed}/{registrationStats.totalPeserta})</span>
+          {/* Size Statistics */}
+          <div className="p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Statistik Ukuran
+            </h3>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold">Ukuran Baju</h4>
+                {Object.entries(registrationStats.sizeStats.baju)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([size, count]) => (
+                    <div key={`baju-${size}`} className="flex justify-between text-sm">
+                      <span>Ukuran {size}</span>
+                      <span className="font-medium">{count} peserta</span>
                     </div>
-                    <Progress value={data.percentage} className="h-2" />
-                  </div>
-                ))}
+                  ))}
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold">Ukuran Sepatu</h4>
+                {Object.entries(registrationStats.sizeStats.sepatu)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([size, count]) => (
+                    <div key={`sepatu-${size}`} className="flex justify-between text-sm">
+                      <span>Ukuran {size}</span>
+                      <span className="font-medium">{count} peserta</span>
+                    </div>
+                  ))}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Bus Progress */}
-          {statusStats && Object.keys(statusStats.byBus).length > 0 && (
-            <div className="p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow lg:col-span-1">
-              <h3 className="text-lg font-semibold mb-6">Progress per Bus</h3>
-              <div className="space-y-6">
-                {Object.entries(statusStats.byBus).map(([bus, statuses]) => (
-                  <div key={bus} className="space-y-4">
-                    <h4 className="text-sm font-semibold">{bus}</h4>
-                    {Object.entries(statuses).map(([status, count]) => (
-                      <div key={status} className="flex justify-between text-sm">
-                        <span>{status}</span>
-                        <span className="font-medium">{count} selesai</span>
+          {/* Combined Status and Bus Progress */}
+          {statusStats && (
+            <div className="p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow col-span-2">
+              <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                <IconProgress className="w-5 h-5" />
+                Progress Status
+              </h3>
+              <div className="grid gap-8">
+                {Object.entries(statusStats.completionRates).map(([status, data]) => (
+                  <div key={status} className="space-y-4">
+                    <div className="flex justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        {status.toLowerCase().includes('keberangkatan') ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 flex items-center gap-1">
+                            <IconPlaneDeparture className="w-3 h-3" />
+                            {status}
+                          </Badge>
+                        ) : status.toLowerCase().includes('kepulangan') ? (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 flex items-center gap-1">
+                            <IconPlaneArrival className="w-3 h-3" />
+                            {status}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            {status}
+                          </Badge>
+                        )}
                       </div>
-                    ))}
+                      <div className="flex items-center gap-2">
+                        <span>{Math.round(data.percentage)}% ({data.completed}/{registrationStats.totalPeserta})</span>
+                        {data.percentage >= 100 && (
+                          <Badge variant="outline" className="bg-green-50 text-green-700">
+                            <span className="flex items-center gap-1">
+                              <IconArrowUpRight className="w-3 h-3" />
+                              Selesai
+                            </span>
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <Progress value={data.percentage} className="h-2" />
+                    {/* Recent activity */}
+                    {statusStats.recentCompletions[status] && (
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <IconClock className="w-3 h-3" />
+                          24j terakhir: +{statusStats.recentCompletions[status].last24h}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <IconClock className="w-3 h-3" />
+                          7h terakhir: +{statusStats.recentCompletions[status].last7d}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Bus Progress for this status */}
+                    {Object.keys(statusStats.byBus).length > 0 && (
+                      <div className="mt-4 border-t pt-4">
+                        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <IconBus className="w-4 h-4" />
+                          Progress per Bus
+                        </h4>
+                        <div className="grid gap-2">
+                          {Object.entries(statusStats.byBus).map(([bus, statuses]) => {
+                            const count = statuses[status] || 0;
+                            const isComplete = count === registrationStats.totalPeserta;
+                            return (
+                              <div key={bus} className="flex justify-between items-center text-sm">
+                                <span className="font-medium">{bus}</span>
+                                <div className="flex items-center gap-2">
+                                  <span>{count} selesai</span>
+                                  {isComplete && (
+                                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                                      <span className="flex items-center gap-1">
+                                        <IconArrowUpRight className="w-3 h-3" />
+                                        Lengkap
+                                      </span>
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -402,8 +536,33 @@ export function ManageStatus() {
           <TableBody>
             {statusTemplates.map((status) => (
               <TableRow key={status.nama}>
-                <TableCell className="font-medium">{status.nama}</TableCell>
-                <TableCell>{status.count} peserta</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {status.nama.toLowerCase().includes('keberangkatan') ? (
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        {status.nama}
+                      </Badge>
+                    ) : status.nama.toLowerCase().includes('kepulangan') ? (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        {status.nama}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">
+                        {status.nama}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span>{status.count} peserta</span>
+                    {status.count === (registrationStats?.totalPeserta || 0) && (
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        Lengkap
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
                     <Button

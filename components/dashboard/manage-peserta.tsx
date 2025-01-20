@@ -2,6 +2,7 @@
 
 import { useEffect, useReducer, useState } from "react"
 import { toast } from "sonner"
+import { UserRole } from "@prisma/client"
 import {
   Table,
   TableBody,
@@ -90,6 +91,13 @@ export function ManagePeserta() {
   useEffect(() => {
     filterPeserta()
   }, [state.searchQuery, state.filterTiket, state.filterBus, state.filterAlat, state.filterOptionalItems, state.peserta])
+
+  // Refetch data when drawer closes
+  useEffect(() => {
+    if (!isDrawerOpen) {
+      loadData()
+    }
+  }, [isDrawerOpen])
 
   const loadData = async () => {
     try {
@@ -294,7 +302,14 @@ export function ManagePeserta() {
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    {p.name}
+                    <span className={`${p.role === UserRole.CREW ? "text-blue-600 font-semibold" : ""}`}>
+                      {p.name}
+                    </span>
+                    {p.role === UserRole.CREW && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-600 hover:bg-blue-200">
+                        CREW
+                      </Badge>
+                    )}
                     {hasPembayaranStatus(p.status || [], p.registration) && (
                       <CheckCircle2 className="h-3 w-3 mr-1" />
                     )}
