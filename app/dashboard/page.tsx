@@ -5,12 +5,11 @@ import { ManagePackages } from "@/components/dashboard/manage-packages"
 import { ManageBuses } from "@/components/dashboard/manage-buses"
 import { ManageStatus } from "@/components/dashboard/manage-status"
 import { ManagePeserta } from "@/components/dashboard/manage-peserta"
-import { ManagePanitia } from "@/components/dashboard/manage-panitia"
 import { ManageOptionalItems } from "@/components/dashboard/manage-optional-items"
 import { ManageRegistrationLogs } from "@/components/dashboard/manage-registration-logs"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Users, Package, Bus, CheckSquare, ClipboardList, UserCog, RefreshCw } from "lucide-react"
+import { Users, Package, Bus, CheckSquare, ClipboardList, RefreshCw } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
@@ -71,11 +70,7 @@ export default function DashboardPage() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange} defaultValue="peserta" className="space-y-6">
         {/* Keeping original tab structure */}
-        <TabsList className="grid grid-cols-6 gap-4">
-          <TabsTrigger value="panitia" className="flex items-center gap-2">
-            <UserCog className="h-4 w-4" />
-            <span className="hidden md:inline">Daftar Panitia</span>
-          </TabsTrigger>
+        <TabsList className="grid grid-cols-5 gap-4">
           <TabsTrigger value="peserta" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden md:inline">Daftar Peserta</span>
@@ -97,10 +92,6 @@ export default function DashboardPage() {
             <span className="hidden md:inline">Log Registrasi</span>
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="panitia">
-          <ManagePanitia />
-        </TabsContent>
 
         <TabsContent value="peserta">
           <ManagePeserta />

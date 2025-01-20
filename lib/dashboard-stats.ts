@@ -15,14 +15,27 @@ export type { RegistrationStats, StatusStats, };
 
 interface RegistrationStats {
   totalPeserta: number;
+  totalCrew: number;
   ticketBreakdown: {
-    [key: string]: number;
+    peserta: {
+      [key: string]: number;
+    };
+    crew: {
+      [key: string]: number;
+    };
   };
   equipmentCount: {
     ski: number;
     snowboard: number;
   };
-  totalOptionalItems: number;
+  optionalItems: {
+    peserta: {
+      [key: string]: number;
+    };
+    crew: {
+      [key: string]: number;
+    };
+  };
   sizeStats: {
     baju: { [size: string]: number };
     sepatu: { [size: string]: number };
@@ -50,16 +63,24 @@ interface StatusStats {
 }
 
 export function calculateRegistrationStats(peserta: any[]): RegistrationStats {
-  const totalPeserta = peserta.length;
+  const totalPeserta = peserta.filter(p => p.role === 'PESERTA').length;
+  const totalCrew = peserta.filter(p => p.role === 'CREW').length;
   
   const stats: RegistrationStats = {
     totalPeserta,
-    ticketBreakdown: {},
+    totalCrew,
+    ticketBreakdown: {
+      peserta: {},
+      crew: {}
+    },
     equipmentCount: {
       ski: 0,
       snowboard: 0
     },
-    totalOptionalItems: 0,
+    optionalItems: {
+      peserta: {},
+      crew: {}
+    },
     sizeStats: {
       baju: {},
       sepatu: {}
@@ -71,16 +92,27 @@ export function calculateRegistrationStats(peserta: any[]): RegistrationStats {
     if (p.tipeAlat === 'ski') stats.equipmentCount.ski++;
     if (p.tipeAlat === 'snowboard') stats.equipmentCount.snowboard++;
 
-    // Ticket breakdown
+    // Ticket breakdown by role
     if (p.registration?.ticketType) {
-      stats.ticketBreakdown[p.registration.ticketType] = 
-        (stats.ticketBreakdown[p.registration.ticketType] || 0) + 1;
+      if (p.role === 'PESERTA') {
+        stats.ticketBreakdown.peserta[p.registration.ticketType] = 
+          (stats.ticketBreakdown.peserta[p.registration.ticketType] || 0) + 1;
+      } else if (p.role === 'CREW') {
+        stats.ticketBreakdown.crew[p.registration.ticketType] = 
+          (stats.ticketBreakdown.crew[p.registration.ticketType] || 0) + 1;
+      }
     }
 
-    // Count participants with optional items
-    if (p.optionalItems.length > 0) {
-      stats.totalOptionalItems++;
-    }
+    // Count optional items by role
+    p.optionalItems.forEach((item: { namaItem: string }) => {
+      if (p.role === 'PESERTA') {
+        stats.optionalItems.peserta[item.namaItem] = 
+          (stats.optionalItems.peserta[item.namaItem] || 0) + 1;
+      } else if (p.role === 'CREW') {
+        stats.optionalItems.crew[item.namaItem] = 
+          (stats.optionalItems.crew[item.namaItem] || 0) + 1;
+      }
+    });
 
     // Count clothing and shoe sizes
     if (p.ukuranBaju) {
@@ -97,7 +129,7 @@ export function calculateRegistrationStats(peserta: any[]): RegistrationStats {
 }
 
 export function calculateStatusStats(peserta: any[]): StatusStats {
-  const totalPeserta = peserta.length;
+  const totalParticipants = peserta.length; // Total of both PESERTA and CREW
   const now = new Date();
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -150,7 +182,7 @@ export function calculateStatusStats(peserta: any[]): StatusStats {
   // Calculate percentages
   Object.keys(stats.completionRates).forEach(status => {
     stats.completionRates[status].percentage = 
-      (stats.completionRates[status].completed / totalPeserta) * 100;
+      (stats.completionRates[status].completed / totalParticipants) * 100;
   });
 
   return stats;

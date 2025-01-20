@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash, Users, Ticket, Package, } from "lucide-react";
+import { Plus, Pencil, Trash, Users, Ticket, Package, ShirtIcon, } from "lucide-react";
 import { toast } from "sonner";
 import { 
   createStatusTemplate, 
@@ -33,7 +33,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { IconSkateboard, IconSkateboarding, IconBus, IconClock, IconProgress, IconArrowUpRight, IconPlaneArrival, IconPlaneDeparture } from "@tabler/icons-react";
+import { IconSkateboard, IconSkateboarding, IconBus, IconClock, IconProgress, IconArrowUpRight, IconPlaneArrival, IconPlaneDeparture, IconShoe } from "@tabler/icons-react";
 import { calculateRegistrationStats, calculateStatusStats } from "@/lib/dashboard-stats";
 
 interface StatusTemplate {
@@ -204,12 +204,28 @@ export function ManageStatus() {
               Statistik Pendaftaran
             </h3>
             <div className="space-y-4 md:space-y-6">
-              <div className="flex justify-between items-center">
-                <span className="text-sm md:text-base font-medium flex items-center gap-2">
-                  <Users className="w-3 h-3 md:w-4 md:h-4" />
-                  Total Pendaftar
-                </span>
-                <span className="text-base md:text-lg font-semibold">{registrationStats.totalPeserta}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm md:text-base font-medium flex items-center gap-2">
+                    <Users className="w-3 h-3 md:w-4 md:h-4" />
+                    Total Peserta
+                  </span>
+                  <span className="text-base md:text-lg font-semibold">{registrationStats.totalPeserta}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm md:text-base font-medium flex items-center gap-2">
+                    <Users className="w-3 h-3 md:w-4 md:h-4" />
+                    Total Crew
+                  </span>
+                  <span className="text-base md:text-lg font-semibold">{registrationStats.totalCrew}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm md:text-base font-medium flex items-center gap-2">
+                    <Users className="w-3 h-3 md:w-4 md:h-4" />
+                    Total Keseluruhan
+                  </span>
+                  <span className="text-base md:text-lg font-semibold">{registrationStats.totalPeserta + registrationStats.totalCrew}</span>
+                </div>
               </div>
               <div className="space-y-3 md:space-y-4">
                 <h4 className="text-sm md:text-base font-semibold">Pemilihan Alat</h4>
@@ -237,23 +253,52 @@ export function ManageStatus() {
               <Ticket className="w-4 h-4 md:w-5 md:h-5" />
               Pemilihan Tiket
             </h3>
-            <div className="space-y-3 md:space-y-4">
-              {Object.entries(registrationStats.ticketBreakdown).map(([type, count]) => (
-                <div key={type} className="flex justify-between text-sm md:text-base items-center">
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      "text-sm md:text-base truncate max-w-[200px]",
-                      type.toLowerCase().includes('gondola') && "bg-purple-50 text-purple-700",
-                      type.toLowerCase().includes('eskalator') && "bg-blue-50 text-blue-700",
-                      type.toLowerCase().includes('basic') && "bg-green-50 text-green-700"
-                    )}
-                  >
-                    {type}
-                  </Badge>
-                  <span className="font-medium">{count} peserta</span>
+            <div className="space-y-4 md:space-y-6">
+              {/* Peserta Tickets */}
+              <div className="space-y-2">
+                <h4 className="text-sm md:text-base font-semibold">Peserta</h4>
+                <div className="space-y-3">
+                  {Object.entries(registrationStats.ticketBreakdown.peserta).map(([type, count]) => (
+                    <div key={`peserta-${type}`} className="flex justify-between text-sm md:text-base items-center">
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "text-sm md:text-base truncate max-w-[200px]",
+                          type.toLowerCase().includes('gondola') && "bg-purple-50 text-purple-700",
+                          type.toLowerCase().includes('eskalator') && "bg-blue-50 text-blue-700",
+                          type.toLowerCase().includes('basic') && "bg-green-50 text-green-700"
+                        )}
+                      >
+                        {type}
+                      </Badge>
+                      <span className="font-medium">{count} peserta</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Crew Tickets */}
+              <div className="space-y-2">
+                <h4 className="text-sm md:text-base font-semibold">Crew</h4>
+                <div className="space-y-3">
+                  {Object.entries(registrationStats.ticketBreakdown.crew).map(([type, count]) => (
+                    <div key={`crew-${type}`} className="flex justify-between text-sm md:text-base items-center">
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "text-sm md:text-base truncate max-w-[200px]",
+                          type.toLowerCase().includes('gondola') && "bg-purple-50 text-purple-700",
+                          type.toLowerCase().includes('eskalator') && "bg-blue-50 text-blue-700",
+                          type.toLowerCase().includes('basic') && "bg-green-50 text-green-700"
+                        )}
+                      >
+                        {type}
+                      </Badge>
+                      <span className="font-medium">{count} crew</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -261,11 +306,38 @@ export function ManageStatus() {
           <div className="p-4 md:p-6 rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow">
             <h3 className="text-base md:text-lg font-semibold mb-4 md:mb-6 flex items-center gap-2">
               <Package className="w-4 h-4 md:w-5 md:h-5" />
-              Item Tambahan
+              Konsumsi
             </h3>
-            <div className="flex justify-between text-sm md:text-base">
-              <span>Konsumsi</span>
-              <span className="font-medium">{registrationStats.totalOptionalItems} peserta</span>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="p-2 rounded-lg border bg-card">
+                  <div className="flex justify-between items-center">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                      Total Peserta
+                    </Badge>
+                    <span className="font-medium">{Object.values(registrationStats.optionalItems.peserta).reduce((a, b) => a + b, 0)} orang</span>
+                  </div>
+                </div>
+                <div className="p-2 rounded-lg border bg-card">
+                  <div className="flex justify-between items-center">
+                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                      Total Crew
+                    </Badge>
+                    <span className="font-medium">{Object.values(registrationStats.optionalItems.crew).reduce((a, b) => a + b, 0)} orang</span>
+                  </div>
+                </div>
+                <div className="p-2 rounded-lg border bg-muted">
+                  <div className="flex justify-between items-center">
+                    <Badge variant="outline" className="text-muted-foreground">
+                      Total Keseluruhan
+                    </Badge>
+                    <span className="font-medium">
+                      {Object.values(registrationStats.optionalItems.peserta).reduce((a, b) => a + b, 0) + 
+                       Object.values(registrationStats.optionalItems.crew).reduce((a, b) => a + b, 0)} orang
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -277,24 +349,35 @@ export function ManageStatus() {
             </h3>
             <div className="space-y-4 md:space-y-6">
               <div className="space-y-3 md:space-y-4">
-                <h4 className="text-sm md:text-base font-semibold">Ukuran Baju</h4>
+                <h4 className="text-sm md:text-base font-semibold flex items-center gap-2">
+                  
+                  Ukuran Baju
+                  <ShirtIcon className="w-3 h-3 md:w-4 md:h-4" />
+                </h4>
                 {Object.entries(registrationStats.sizeStats.baju)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([size, count]) => (
-                    <div key={`baju-${size}`} className="flex justify-between text-sm md:text-base">
-                      <span>Ukuran {size}</span>
-                      <span className="font-medium">{count} peserta</span>
+                    <div key={`baju-${size}`} className="border-b pb-2">
+                      <div className="flex justify-between text-sm md:text-base">
+                        <span className="ml-6">{size}</span>
+                        <span className="font-medium">{count} peserta</span>
+                      </div>
                     </div>
                   ))}
               </div>
               <div className="space-y-3 md:space-y-4">
-                <h4 className="text-sm md:text-base font-semibold">Ukuran Sepatu</h4>
+                <h4 className="text-sm md:text-base font-semibold flex items-center gap-2">
+                  Ukuran Sepatu
+                  <IconShoe className="w-3 h-3 md:w-4 md:h-4" />
+                </h4>
                 {Object.entries(registrationStats.sizeStats.sepatu)
                   .sort(([a], [b]) => a.localeCompare(b))
                   .map(([size, count]) => (
-                    <div key={`sepatu-${size}`} className="flex justify-between text-sm md:text-base">
-                      <span>Ukuran {size}</span>
-                      <span className="font-medium">{count} peserta</span>
+                    <div key={`sepatu-${size}`} className="border-b pb-2">
+                      <div className="flex justify-between text-sm md:text-base">
+                        <span className="ml-6">{size}</span>
+                        <span className="font-medium">{count} peserta</span>
+                      </div>
                     </div>
                   ))}
               </div>
@@ -330,7 +413,7 @@ export function ManageStatus() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span>{Math.round(data.percentage)}% ({data.completed}/{registrationStats.totalPeserta})</span>
+                        <span>{Math.round(data.percentage)}% ({data.completed}/{registrationStats.totalPeserta + registrationStats.totalCrew})</span>
                         {data.percentage >= 100 && (
                           <Badge variant="outline" className="bg-green-50 text-green-700">
                             <span className="flex items-center gap-1 text-sm md:text-base">
@@ -366,7 +449,7 @@ export function ManageStatus() {
                         <div className="grid gap-2">
                           {Object.entries(statusStats.byBus).map(([bus, statuses]) => {
                             const count = statuses[status] || 0;
-                            const isComplete = count === registrationStats.totalPeserta;
+                            const isComplete = count === (registrationStats.totalPeserta + registrationStats.totalCrew);
                             return (
                               <div key={bus} className="flex justify-between items-center text-sm md:text-base">
                                 <span className="font-medium">{bus}</span>
@@ -429,7 +512,7 @@ export function ManageStatus() {
                   <TableCell className="text-sm md:text-base">
                     <div className="flex items-center gap-2">
                       <span>{status.count} peserta</span>
-                      {status.count === (registrationStats?.totalPeserta || 0) && (
+                      {status.count === ((registrationStats?.totalPeserta || 0) + (registrationStats?.totalCrew || 0)) && (
                         <Badge variant="outline" className="bg-green-50 text-green-700 text-sm md:text-base">
                           Lengkap
                         </Badge>
