@@ -214,11 +214,6 @@ export function ManageBuses() {
                     value={(bus.terisi / bus.kapasitas) * 100} 
                     className="h-2"
                   />
-                  {bus.terisi > bus.kapasitas && (
-                    <div className="text-sm text-red-500 font-medium">
-                      Overcapacity! Remove {bus.terisi - bus.kapasitas} peserta to meet new capacity.
-                    </div>
-                  )}
                 </div>
 
                 {bus.crew.length > 0 && (
