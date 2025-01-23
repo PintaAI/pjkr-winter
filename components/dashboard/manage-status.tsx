@@ -368,7 +368,7 @@ export function ManageStatus() {
                       </Badge>
                       <span className="font-medium">
                         {Object.entries(registrationStats.optionalItems.peserta)
-                          .filter(([key]) => !key.includes('(Ijeongbu)'))
+                          .filter(([key]) => !key.includes('(BusIjeongbu)'))
                           .reduce((acc, [_, count]) => acc + count, 0)} orang
                       </span>
                     </div>
@@ -380,7 +380,7 @@ export function ManageStatus() {
                       </Badge>
                       <span className="font-medium">
                         {Object.entries(registrationStats.optionalItems.crew)
-                          .filter(([key]) => !key.includes('(Ijeongbu)'))
+                          .filter(([key]) => !key.includes('(Bus Ijeongbu)'))
                           .reduce((acc, [_, count]) => acc + count, 0)} orang
                       </span>
                     </div>
