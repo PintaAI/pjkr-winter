@@ -323,22 +323,71 @@ export function ManageStatus() {
             </h3>
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
-                <div className="p-2 rounded-lg border bg-card">
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                      Total Peserta
-                    </Badge>
-                    <span className="font-medium">{Object.values(registrationStats.optionalItems.peserta).reduce((a, b) => a + b, 0)} orang</span>
+                {/* Bus Ijeongbu */}
+                <div className="space-y-3">
+                  <h4 className="text-sm md:text-base font-semibold flex items-center gap-2">
+                    <IconBus className="w-3 h-3 md:w-4 md:h-4" />
+                    Bus Ijeongbu
+                  </h4>
+                  <div className="p-2 rounded-lg border bg-card">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        Peserta
+                      </Badge>
+                      <span className="font-medium">
+                        {Object.entries(registrationStats.optionalItems.peserta)
+                          .filter(([key]) => key.includes('(Bus Ijeongbu)'))
+                          .reduce((acc, [_, count]) => acc + count, 0)} orang
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-lg border bg-card">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        Crew
+                      </Badge>
+                      <span className="font-medium">
+                        {Object.entries(registrationStats.optionalItems.crew)
+                          .filter(([key]) => key.includes('(Bus Ijeongbu)'))
+                          .reduce((acc, [_, count]) => acc + count, 0)} orang
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="p-2 rounded-lg border bg-card">
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline" className="bg-green-50 text-green-700">
-                      Total Crew
-                    </Badge>
-                    <span className="font-medium">{Object.values(registrationStats.optionalItems.crew).reduce((a, b) => a + b, 0)} orang</span>
+
+                {/* Other Buses */}
+                <div className="space-y-3">
+                  <h4 className="text-sm md:text-base font-semibold flex items-center gap-2">
+                    <IconBus className="w-3 h-3 md:w-4 md:h-4" />
+                    Bus Lainnya
+                  </h4>
+                  <div className="p-2 rounded-lg border bg-card">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        Peserta
+                      </Badge>
+                      <span className="font-medium">
+                        {Object.entries(registrationStats.optionalItems.peserta)
+                          .filter(([key]) => !key.includes('(Ijeongbu)'))
+                          .reduce((acc, [_, count]) => acc + count, 0)} orang
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-lg border bg-card">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        Crew
+                      </Badge>
+                      <span className="font-medium">
+                        {Object.entries(registrationStats.optionalItems.crew)
+                          .filter(([key]) => !key.includes('(Ijeongbu)'))
+                          .reduce((acc, [_, count]) => acc + count, 0)} orang
+                      </span>
+                    </div>
                   </div>
                 </div>
+
+                {/* Total */}
                 <div className="p-2 rounded-lg border bg-muted">
                   <div className="flex justify-between items-center">
                     <Badge variant="outline" className="text-muted-foreground">

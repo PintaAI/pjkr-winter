@@ -103,14 +103,15 @@ export function calculateRegistrationStats(peserta: any[]): RegistrationStats {
       }
     }
 
-    // Count optional items by role
+    // Count optional items by role and bus
     p.optionalItems.forEach((item: { namaItem: string }) => {
+      const busKey = p.bus?.namaBus ? `${item.namaItem} (${p.bus.namaBus})` : item.namaItem;
       if (p.role === 'PESERTA') {
-        stats.optionalItems.peserta[item.namaItem] = 
-          (stats.optionalItems.peserta[item.namaItem] || 0) + 1;
+        stats.optionalItems.peserta[busKey] = 
+          (stats.optionalItems.peserta[busKey] || 0) + 1;
       } else if (p.role === 'CREW') {
-        stats.optionalItems.crew[item.namaItem] = 
-          (stats.optionalItems.crew[item.namaItem] || 0) + 1;
+        stats.optionalItems.crew[busKey] = 
+          (stats.optionalItems.crew[busKey] || 0) + 1;
       }
     });
 
