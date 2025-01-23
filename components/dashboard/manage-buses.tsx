@@ -27,6 +27,7 @@ interface BusData {
   namaBus: string
   kapasitas: number
   terisi: number
+  crew: string[]
 }
 
 const initialForm: BusForm = {
@@ -51,7 +52,10 @@ export function ManageBuses() {
   const loadBusData = async () => {
     const result = await getBusData()
     if (result.success && result.data) {
-      setBuses(result.data)
+      const sortedBuses = [...result.data].sort((a, b) => 
+        a.namaBus.localeCompare(b.namaBus)
+      )
+      setBuses(sortedBuses)
     }
   }
 
@@ -201,12 +205,6 @@ export function ManageBuses() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Kapasitas: {bus.kapasitas} penumpang
-                  </p>
-                </div>
-
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Terisi: {bus.terisi}/{bus.kapasitas}</span>
@@ -216,7 +214,23 @@ export function ManageBuses() {
                     value={(bus.terisi / bus.kapasitas) * 100} 
                     className="h-2"
                   />
+                  {bus.terisi > bus.kapasitas && (
+                    <div className="text-sm text-red-500 font-medium">
+                      Overcapacity! Remove {bus.terisi - bus.kapasitas} peserta to meet new capacity.
+                    </div>
+                  )}
                 </div>
+
+                {bus.crew.length > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    <p className="font-medium">Crew:</p>
+                    <ul className="list-disc pl-5 space-y-1 mt-2">
+                      {bus.crew.sort().map((crewName, index) => (
+                        <li key={index}>{crewName}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <div className="flex space-x-2">
                   <Dialog>
@@ -260,7 +274,7 @@ export function ManageBuses() {
                           <Input
                             type="number"
                             value={editForm.kapasitas}
-                            onChange={(e) => setEditForm({
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({
                               ...editForm,
                               kapasitas: parseInt(e.target.value)
                             })}

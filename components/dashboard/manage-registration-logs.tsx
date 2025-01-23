@@ -1,7 +1,7 @@
 "use client"
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getPesertaData, updateStatusPeserta } from "@/app/actions/dashboard"
+import { getBusData, getPesertaData, updateStatusPeserta } from "@/app/actions/dashboard"
 import { useEffect, useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -51,6 +51,16 @@ export function ManageRegistrationLogs() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "verified" | "unverified">("all")
+  const [busFilter, setBusFilter] = useState<string>("all")
+
+  // Get unique bus names for filter
+  const getUniqueBuses = () => {
+    const buses = new Set<string>()
+    users.forEach(p => {
+      if (p.bus?.namaBus) buses.add(p.bus.namaBus)
+    })
+    return Array.from(buses)
+  }
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -85,9 +95,13 @@ export function ManageRegistrationLogs() {
         statusFilter === "verified" ? hasPembayaranStatus(user.status, user.registration) :
         !hasPembayaranStatus(user.status, user.registration)
 
-      return matchesSearch && matchesStatus
+      const matchesBus = busFilter === "all" ? true :
+        busFilter === "none" ? !user.bus :
+        user.bus?.namaBus.toLowerCase() === busFilter.toLowerCase()
+
+      return matchesSearch && matchesStatus && matchesBus
     })
-  }, [users, searchQuery, statusFilter])
+  }, [users, searchQuery, statusFilter, busFilter])
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -140,6 +154,21 @@ export function ManageRegistrationLogs() {
             <SelectItem value="unverified">Belum Terverifikasi</SelectItem>
           </SelectContent>
         </Select>
+        <Select
+          value={busFilter}
+          onValueChange={(value: string) => setBusFilter(value)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter Bus" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Bus</SelectItem>
+            <SelectItem value="none">Belum Pilih Bus</SelectItem>
+            {getUniqueBuses().map((bus) => (
+              <SelectItem key={bus} value={bus}>{bus}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="rounded-md border">
@@ -150,6 +179,7 @@ export function ManageRegistrationLogs() {
               <TableHead>Total Pembayaran</TableHead>
               <TableHead>Tanggal Registrasi</TableHead>
               <TableHead>Status Pembayaran</TableHead>
+              <TableHead>Bus</TableHead>
               <TableHead>Bukti Pembayaran</TableHead>
             </TableRow>
           </TableHeader>
@@ -223,6 +253,17 @@ export function ManageRegistrationLogs() {
                   >
                     {hasPembayaranStatus(user.status, user.registration) ? "Terverifikasi" : "Belum Terverifikasi"}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {user.bus ? (
+                    <span className="text-sm">
+                      {user.bus.namaBus}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Belum pilih bus
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {user.registration?.buktiPembayaran ? (

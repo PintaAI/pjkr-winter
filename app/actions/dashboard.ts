@@ -541,6 +541,14 @@ export async function getBusData() {
   try {
     const buses = await db.bus.findMany({
       include: {
+        peserta: {
+          where: {
+            role: "CREW"
+          },
+          select: {
+            name: true
+          }
+        },
         _count: {
           select: { peserta: true }
         }
@@ -553,7 +561,8 @@ export async function getBusData() {
         id: bus.id,
         namaBus: bus.namaBus,
         kapasitas: bus.kapasitas,
-        terisi: bus._count.peserta
+        terisi: bus._count.peserta,
+        crew: bus.peserta.map(p => p.name).filter(Boolean) as string[]
       }))
     }
   } catch (error) {
