@@ -65,23 +65,28 @@ export function ManageBuses() {
     setError(null)
     setSuccess(null)
 
-    try {
-      let result
-      if (isEditing && selectedBusId) {
-        result = await updateBus(selectedBusId, editForm)
-      } else {
-        result = await createBus(editForm)
-      }
+      try {
+        let result;
+        if (isEditing && selectedBusId) {
+          const selectedBus = buses.find(bus => bus.id === selectedBusId)
+          if (selectedBus && editForm.kapasitas < selectedBus.terisi) {
+            setError("Kapasitas tidak boleh kurang dari jumlah penumpang saat ini")
+            return
+          }
+          result = await updateBus(selectedBusId, editForm)
+        } else {
+          result = await createBus(editForm)
+        }
 
-      if (result.success) {
-        setSuccess(result.message)
-        loadBusData()
-        setIsEditing(false)
-        setSelectedBusId(null)
-        setEditForm(initialForm)
-      } else {
-        setError(result.message)
-      }
+        if (result.success) {
+          setSuccess(result.message)
+          loadBusData()
+          setIsEditing(false)
+          setSelectedBusId(null)
+          setEditForm(initialForm)
+        } else {
+          setError(result.message)
+        }
     } catch (error) {
       setError("Terjadi kesalahan saat memproses data bus")
     } finally {
@@ -204,17 +209,40 @@ export function ManageBuses() {
               <CardTitle>{bus.namaBus}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Terisi: {bus.terisi}/{bus.kapasitas}</span>
-                    <span>{Math.round((bus.terisi / bus.kapasitas) * 100)}%</span>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Terisi: {bus.terisi}/{bus.kapasitas}</span>
+                      <span>{Math.round((bus.terisi / bus.kapasitas) * 100)}%</span>
+                    </div>
+                    <Progress 
+                      value={(bus.terisi / bus.kapasitas) * 100} 
+                      className="h-2"
+                    />
+                    {bus.terisi > bus.kapasitas && (
+                      <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md mt-2">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          className="text-red-500"
+                        >
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <line x1="12" y1="8" x2="12" y2="12"></line>
+                          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span className="text-sm text-red-600">
+                          Melebihi kapasitas sebanyak {bus.terisi - bus.kapasitas} peserta
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <Progress 
-                    value={(bus.terisi / bus.kapasitas) * 100} 
-                    className="h-2"
-                  />
-                </div>
 
                 {bus.crew.length > 0 && (
                   <div className="text-sm text-muted-foreground">

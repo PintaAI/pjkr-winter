@@ -36,17 +36,29 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
   const [buses, setBuses] = useState<{ id: string; namaBus: string; kapasitas: number; terisi: number }[]>([]);
   const [isManagingItems, setIsManagingItems] = useState(false);
   const [optionalItems, setOptionalItems] = useState<{ id: string; namaItem: string; harga: number; deskripsi: string[] }[]>([]);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    email: string;
+    telepon: string;
+    alamat: string;
+    ukuranBaju: string;
+    ukuranSepatu: string;
+    tipeAlat: string | null;
+    role: UserRole;
+    busId: string;
+    ticketType: string | null;
+    optionalItems: string[];
+  }>({
     name: peserta.name || "",
     email: peserta.email,
     telepon: peserta.telepon || "",
     alamat: peserta.alamat || "",
     ukuranBaju: peserta.ukuranBaju || "",
     ukuranSepatu: peserta.ukuranSepatu || "",
-    tipeAlat: peserta.tipeAlat || "",
+    tipeAlat: peserta.tipeAlat || null,
     role: peserta.role,
     busId: peserta.bus?.id || "none",
-    ticketType: peserta.tiket[0]?.tipe || "",
+    ticketType: peserta.tiket[0]?.tipe || null,
     optionalItems: peserta.optionalItems.map(item => item.id)
   });
 

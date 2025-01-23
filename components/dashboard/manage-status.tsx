@@ -299,6 +299,19 @@ export function ManageStatus() {
                   ))}
                 </div>
               </div>
+
+              {/* Total Tickets */}
+              <div className="pt-4 mt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <Badge variant="outline" className="bg-muted text-muted-foreground text-sm md:text-base">
+                    Total Tiket
+                  </Badge>
+                  <span className="font-semibold">
+                    {Object.values(registrationStats.ticketBreakdown.peserta).reduce((a, b) => a + b, 0) + 
+                     Object.values(registrationStats.ticketBreakdown.crew).reduce((a, b) => a + b, 0)} tiket
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 

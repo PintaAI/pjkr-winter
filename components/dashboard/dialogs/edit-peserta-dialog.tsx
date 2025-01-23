@@ -20,6 +20,7 @@ import {
 import { Edit } from "lucide-react";
 import { UserRole } from "@prisma/client";
 import { formatWon } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface OptionalItem {
   id: string;
@@ -43,10 +44,10 @@ interface EditFormData {
   alamat: string;
   ukuranBaju: string;
   ukuranSepatu: string;
-  tipeAlat: string;
+  tipeAlat: string | null;
   role: UserRole;
   busId: string;
-  ticketType: string;
+  ticketType: string | null;
 }
 
 interface EditPesertaDialogProps {
@@ -77,11 +78,12 @@ export function EditPesertaDialog({
           <Edit className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Data Peserta</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <ScrollArea className="h-full max-h-[70vh]">
+          <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="name">Nama</Label>
             <Input
@@ -134,13 +136,14 @@ export function EditPesertaDialog({
           <div className="grid gap-2">
             <Label htmlFor="tipeAlat">Tipe Alat</Label>
             <Select
-              value={editForm.tipeAlat}
-              onValueChange={(value) => setEditForm({ ...editForm, tipeAlat: value })}
+              value={editForm.tipeAlat || "none"}
+              onValueChange={(value) => setEditForm({ ...editForm, tipeAlat: value === "none" ? null : value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Pilih tipe alat" />
+                <SelectValue placeholder="Pilih tipe alat (opsional)" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Tidak memilih</SelectItem>
                 <SelectItem value="ski">Ski</SelectItem>
                 <SelectItem value="snowboard">Snowboard</SelectItem>
               </SelectContent>
@@ -165,13 +168,14 @@ export function EditPesertaDialog({
           <div className="grid gap-2">
             <Label htmlFor="ticketType">Tipe Tiket</Label>
             <Select
-              value={editForm.ticketType}
-              onValueChange={(value) => setEditForm({ ...editForm, ticketType: value })}
+              value={editForm.ticketType || "none"}
+              onValueChange={(value) => setEditForm({ ...editForm, ticketType: value === "none" ? null : value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Pilih tipe tiket" />
+                <SelectValue placeholder="Pilih tipe tiket (opsional)" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Tidak memilih</SelectItem>
                 <SelectItem value="BASIC PASS">Basic Pass</SelectItem>
                 <SelectItem value="ESKALATOR PASS">Eskalator Pass</SelectItem>
                 <SelectItem value="GONDOLA PASS">Gondola Pass</SelectItem>
@@ -252,8 +256,9 @@ export function EditPesertaDialog({
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div className="flex justify-end gap-2">
+          </div>
+        </ScrollArea>
+        <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Batal
           </Button>

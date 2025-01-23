@@ -95,9 +95,9 @@ export async function updatePeserta(id: string, data: {
   busId?: string | null
   ukuranBaju?: string
   ukuranSepatu?: string
-  tipeAlat?: string
+  tipeAlat?: string | null
   role?: UserRole
-  ticketType?: string
+  ticketType?: string | null
   optionalItems?: string[]
 }) {
   try {
@@ -151,13 +151,12 @@ export async function updatePeserta(id: string, data: {
         }
       }
 
-      // Update ticket type if provided
-      if (data.ticketType) {
-        // Get the first ticket (assuming one ticket per user)
-        const existingTicket = await tx.ticket.findFirst({
-          where: { pesertaId: id }
-        });
+      // Handle ticket type changes
+      const existingTicket = await tx.ticket.findFirst({
+        where: { pesertaId: id }
+      });
 
+      if (data.ticketType) {
         if (existingTicket) {
           // Update existing ticket
           await tx.ticket.update({
@@ -185,6 +184,24 @@ export async function updatePeserta(id: string, data: {
           await tx.registration.update({
             where: { id: user.registration.id },
             data: { ticketType: data.ticketType }
+          });
+        }
+      } else if (existingTicket) {
+        // If ticketType is null and ticket exists, delete the ticket
+        await tx.ticket.delete({
+          where: { id: existingTicket.id }
+        });
+
+        // Update registration ticketType to null
+        const user = await tx.user.findUnique({
+          where: { id },
+          include: { registration: true }
+        });
+
+        if (user?.registration) {
+          await tx.registration.update({
+            where: { id: user.registration.id },
+            data: { ticketType: "" }
           });
         }
       }

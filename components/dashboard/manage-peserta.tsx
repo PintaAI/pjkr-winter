@@ -36,6 +36,7 @@ type State = {
   filterBus: string
   filterAlat: string
   filterOptionalItems: string
+  filterCrew: string
 }
 
 type Action =
@@ -46,6 +47,7 @@ type Action =
   | { type: 'SET_FILTER_BUS'; payload: string }
   | { type: 'SET_FILTER_ALAT'; payload: string }
   | { type: 'SET_FILTER_OPTIONAL_ITEMS'; payload: string }
+  | { type: 'SET_FILTER_CREW'; payload: string }
 
 const initialState: State = {
   peserta: [],
@@ -54,7 +56,8 @@ const initialState: State = {
   filterTiket: "all",
   filterBus: "all",
   filterAlat: "all",
-  filterOptionalItems: "all"
+  filterOptionalItems: "all",
+  filterCrew: "all",
 }
 
 function reducer(state: State, action: Action): State {
@@ -73,6 +76,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, filterAlat: action.payload }
     case 'SET_FILTER_OPTIONAL_ITEMS':
       return { ...state, filterOptionalItems: action.payload }
+    case 'SET_FILTER_CREW':
+      return { ...state, filterCrew: action.payload }
     default:
       return state
   }
@@ -90,7 +95,7 @@ export function ManagePeserta() {
 
   useEffect(() => {
     filterPeserta()
-  }, [state.searchQuery, state.filterTiket, state.filterBus, state.filterAlat, state.filterOptionalItems, state.peserta])
+  }, [state.searchQuery, state.filterTiket, state.filterBus, state.filterAlat, state.filterOptionalItems, state.filterCrew, state.peserta])
 
   // Refetch data when drawer closes
   useEffect(() => {
@@ -154,6 +159,16 @@ export function ManagePeserta() {
       filtered = filtered.filter(p => {
         const hasOptionalItems = Array.isArray(p.optionalItems) && p.optionalItems.length > 0;
         return state.filterOptionalItems === "ada" ? hasOptionalItems : !hasOptionalItems;
+      });
+    }
+
+    // Crew filter
+    if (state.filterCrew !== "all") {
+      filtered = filtered.filter(p => {
+        if (state.filterCrew === "crew") {
+          return p.role === UserRole.CREW;
+        }
+        return p.role !== UserRole.CREW;
       });
     }
 
@@ -266,6 +281,20 @@ export function ManagePeserta() {
               <SelectItem value="all">Makanan</SelectItem>
               <SelectItem value="ada">Include</SelectItem>
               <SelectItem value="tidak">Tidak</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={state.filterCrew}
+            onValueChange={(value) => dispatch({ type: 'SET_FILTER_CREW', payload: value })}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Filter Crew" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua</SelectItem>
+              <SelectItem value="crew">Crew</SelectItem>
+              <SelectItem value="non-crew">Non-Crew</SelectItem>
             </SelectContent>
           </Select>
         </div>
