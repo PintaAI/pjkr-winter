@@ -60,10 +60,9 @@ export function ManageStatus() {
 
   // Add a refresh interval
   useEffect(() => {
-    const interval = setInterval(loadData, 600000); // 10 minutes
-    return () => clearInterval(interval);
-  }, []);
-
+      const interval = setInterval(loadData, 5000); // 5 seconds
+      return () => clearInterval(interval);
+    }, []);
   const loadData = async () => {
     try {
       // Load status templates
@@ -450,7 +449,27 @@ export function ManageStatus() {
                 Progress Status
               </h3>
               <div className="grid gap-6 md:gap-8">
-                {Object.entries(statusStats.completionRates).map(([status, data]) => (
+                {Object.entries(statusStats.completionRates)
+                  .sort(([statusA], [statusB]) => {
+                    // Helper function to get status priority
+                    const getPriority = (status: string) => {
+                      const lower = status.toLowerCase();
+                      if (lower.includes('keberangkatan')) return 1;
+                      if (lower.includes('kepulangan')) return 2;
+                      return 3;
+                    };
+                    
+                    const priorityA = getPriority(statusA);
+                    const priorityB = getPriority(statusB);
+                    
+                    // First sort by priority
+                    if (priorityA !== priorityB) {
+                      return priorityA - priorityB;
+                    }
+                    // Then sort alphabetically within same priority
+                    return statusA.localeCompare(statusB);
+                  })
+                  .map(([status, data]) => (
                   <div key={status} className="space-y-3 md:space-y-4">
                     <div className="flex justify-between text-sm md:text-base">
                       <div className="flex items-center gap-2">
@@ -505,23 +524,45 @@ export function ManageStatus() {
                           Progress per Bus
                         </h4>
                         <div className="grid gap-2">
-                          {Object.entries(statusStats.byBus).map(([bus, statuses]) => {
+                          {Object.entries(statusStats.byBus)
+                            .sort(([busA], [busB]) => busA.localeCompare(busB))
+                            .map(([bus, statuses]) => {
                             const count = statuses[status] || 0;
-                            const isComplete = count === (registrationStats.totalPeserta + registrationStats.totalCrew);
+                            const total = registrationStats.totalPeserta + registrationStats.totalCrew;
+                            const percentage = (count / total) * 100;
+                            const isComplete = count === total;
+                            const isAttendanceStatus = status.toLowerCase().includes('keberangkatan') || status.toLowerCase().includes('kepulangan');
+                            
                             return (
-                              <div key={bus} className="flex justify-between items-center text-sm md:text-base">
-                                <span className="font-medium">{bus}</span>
-                                <div className="flex items-center gap-2">
-                                  <span>{count} selesai</span>
-                                  {isComplete && (
-                                    <Badge variant="outline" className="bg-green-50 text-green-700">
-                                      <span className="flex items-center gap-1 text-sm md:text-base">
-                                        <IconArrowUpRight className="w-3 h-3" />
-                                        Lengkap
-                                      </span>
-                                    </Badge>
-                                  )}
+                              <div key={bus} className="flex flex-col gap-1">
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="font-medium">{bus}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span>{count} selesai</span>
+                                    {isComplete && (
+                                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                                        <span className="flex items-center gap-1 text-xs">
+                                          <IconArrowUpRight className="w-3 h-3" />
+                                          Lengkap
+                                        </span>
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
+                                {isAttendanceStatus && (
+                                  <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                      className={cn(
+                                        "h-full rounded-full transition-all",
+                                        percentage > 75 ? "bg-green-500" 
+                                        : percentage > 50 ? "bg-yellow-500"
+                                        : percentage > 25 ? "bg-orange-500"
+                                        : "bg-red-500"
+                                      )}
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
