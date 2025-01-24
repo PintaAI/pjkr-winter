@@ -60,11 +60,7 @@ export function ManageStatus() {
 
   // Add a refresh interval
   useEffect(() => {
-    // Refresh data every 5 seconds
-    const interval = setInterval(() => {
-      loadData();
-    }, 5000);
-
+    const interval = setInterval(loadData, 600000); // 10 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -368,7 +364,7 @@ export function ManageStatus() {
                       </Badge>
                       <span className="font-medium">
                         {Object.entries(registrationStats.optionalItems.peserta)
-                          .filter(([key]) => !key.includes('(BusIjeongbu)'))
+                          .filter(([key]) => !key.includes('(Bus Ijeongbu)'))
                           .reduce((acc, [_, count]) => acc + count, 0)} orang
                       </span>
                     </div>

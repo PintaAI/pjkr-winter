@@ -98,11 +98,13 @@ export function ManagePeserta() {
   }, [state.searchQuery, state.filterTiket, state.filterBus, state.filterAlat, state.filterOptionalItems, state.filterCrew, state.peserta])
 
   // Refetch data when drawer closes
+  // Only reload data if drawer was previously open and is now closing
   useEffect(() => {
-    if (!isDrawerOpen) {
-      loadData()
+    if (!isDrawerOpen && selectedPeserta) {
+      loadData();
+      setSelectedPeserta(null);
     }
-  }, [isDrawerOpen])
+  }, [isDrawerOpen]);
 
   const loadData = async () => {
     try {
