@@ -36,7 +36,22 @@ export async function POST(req: Request) {
     });
 
     if (!status) {
-      return new NextResponse("Status not found", { status: 404 });
+      // Check if the status template exists at all
+      const statusExists = await db.statusPeserta.findFirst({
+        where: { nama: statusName }
+      });
+
+      if (!statusExists) {
+        return NextResponse.json({
+          success: false,
+          message: `Status "${statusName}" belum dibuat. Silakan buat status terlebih dahulu di halaman Kelola Status.`
+        }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        success: false,
+        message: `Status "${statusName}" belum dibuat untuk peserta ini. Silakan buat status terlebih dahulu di halaman Kelola Status.`
+      }, { status: 404 });
     }
 
     // Update the status
