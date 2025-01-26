@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash, Users, Ticket, Package, ShirtIcon, } from "lucide-react";
+import { Plus, Pencil, Trash, Users, Ticket, Package, ShirtIcon, QrCode, } from "lucide-react";
 import { toast } from "sonner";
 import { 
   createStatusTemplate, 
@@ -42,6 +42,7 @@ interface StatusTemplate {
 }
 
 import type { RegistrationStats, StatusStats } from "@/lib/dashboard-stats";
+import Link from "next/link";
 
 export function ManageStatus() {
   const [open, setOpen] = useState(false);
@@ -640,6 +641,15 @@ export function ManageStatus() {
                         onClick={() => handleDelete(status.nama)}
                       >
                         <Trash className="h-3 w-3 md:h-4 md:w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                      >
+                        <Link href={`/scan?status=${encodeURIComponent(status.nama)}`}>
+                          <QrCode className="h-3 w-3 md:h-4 md:w-4" />
+                        </Link>
                       </Button>
                     </div>
                   </TableCell>

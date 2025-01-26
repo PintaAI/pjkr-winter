@@ -28,6 +28,7 @@ export function ScannerContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get('type') as 'departure' | 'return' | null;
   const busId = searchParams.get('busId') || undefined;
+  const statusName = searchParams.get('status') || undefined;
   const [history, setHistory] = useState<ScanHistory[]>([]);
 
   const handleScanComplete = (result: {
@@ -51,12 +52,15 @@ export function ScannerContent() {
       <div className="bg-background border-b">
         <div className="max-w-md mx-auto px-4 py-2">
           <h2 className="text-lg font-medium mb-2 text-center">
-            {type ? `Absensi ${attendanceType}` : 'QR Scanner Preview'}
+            {type ? `Absensi ${attendanceType}` : 
+             statusName ? `Scan Status: ${statusName}` : 
+             'QR Scanner Preview'}
           </h2>
           <div className="relative rounded-lg overflow-hidden">
             <QRScanner 
               type={type || undefined}
               busId={busId}
+              statusName={statusName}
               onScanComplete={handleScanComplete}
             />
           </div>

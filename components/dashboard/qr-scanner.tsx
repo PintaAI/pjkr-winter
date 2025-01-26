@@ -25,6 +25,7 @@ type PesertaWithRelations = User & {
 interface QRScannerProps {
   type?: 'departure' | 'return';
   busId?: string;
+  statusName?: string;
   onScanComplete?: (result: {
     peserta: PesertaWithRelations;
     success: boolean;
@@ -32,7 +33,7 @@ interface QRScannerProps {
   }) => void;
 }
 
-export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
+export function QRScanner({ type, busId, statusName, onScanComplete }: QRScannerProps) {
   const router = useRouter();
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,25 +100,41 @@ export function QRScanner({ type, busId, onScanComplete }: QRScannerProps) {
         return;
       }
 
-      // If we have type/busId, update attendance
+      // Handle status update or attendance update
       try {
-        const attendanceResponse = await fetch('/api/attendance/update', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            pesertaId: pesertaData.id,
-            type,
-            busId
-          }),
-        });
-
-        if (!attendanceResponse.ok) {
-          throw new Error("Gagal memperbarui status kehadiran");
+        let response;
+        if (statusName) {
+          // Update specific status
+          response = await fetch('/api/status/update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              pesertaId: pesertaData.id,
+              statusName
+            }),
+          });
+        } else if (type && busId) {
+          // Update attendance
+          response = await fetch('/api/attendance/update', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              pesertaId: pesertaData.id,
+              type,
+              busId
+            }),
+          });
         }
 
-        const result = await attendanceResponse.json();
+        if (!response || !response.ok) {
+          throw new Error(statusName ? "Gagal memperbarui status" : "Gagal memperbarui status kehadiran");
+        }
+
+        const result = await response.json();
         
         onScanComplete?.({
           peserta: pesertaData,
