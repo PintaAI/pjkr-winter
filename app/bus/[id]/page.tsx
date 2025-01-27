@@ -194,17 +194,24 @@ export default function BusDetailPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          {isPresent && (
-                            <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100">
-                              Berangkat
-                            </Badge>
-                          )}
-                          {hasReturned && (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
-                              Pulang
-                            </Badge>
-                          )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {peserta.status.map((status) => (
+                            status.nilai && (
+                              <Badge 
+                                key={status.nama}
+                                variant="outline" 
+                                className={`${
+                                  status.nama === "Keberangkatan" 
+                                    ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                    : status.nama === "Kepulangan"
+                                    ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                }`}
+                              >
+                                {status.nama}
+                              </Badge>
+                            )
+                          ))}
                         </div>
                       </TableCell>
                     </TableRow>
