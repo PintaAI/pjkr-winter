@@ -131,31 +131,14 @@ export function QRScanner({
           code: result.code, // misal: "ALREADY_TRUE" dsb
         });
 
-        if (result.code === "ALREADY_TRUE") {
-          // Kalau status ternyata sudah di-set sebelumnya
-          toast.error("Status sudah aktif sebelumnya!");
-        } else if (result.success) {
+        if (result.success) {
+          // Open the drawer and show success message
+          setPeserta(pesertaData);
+          setDrawerOpen(true);
           toast.success(result.message);
         } else {
           toast.error(result.message);
         }
-
-        // Setelah update, kita pause dulu scannernya
-        if (qrScannerRef.current) {
-          qrScannerRef.current.pause();
-        }
-
-        // Di sini mau auto-reset setelah 2 detik
-        setTimeout(() => {
-          // Reset apapun yang perlu di-reset
-          setPeserta(null);
-          setIsLoading(false);
-          setNeedsRefresh(false);
-          // Mulai lagi scannernya
-          if (qrScannerRef.current) {
-            qrScannerRef.current.start();
-          }
-        }, 2000);
       } else {
         // Mode preview (tanpa update)
         setPeserta(pesertaData);
