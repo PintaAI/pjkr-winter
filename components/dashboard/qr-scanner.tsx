@@ -143,10 +143,7 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
 
         if (result.success) {
           toast.success(result.message);
-          setNeedsRefresh(true);
-          if (qrScannerRef.current) {
-            qrScannerRef.current.pause();
-          }
+          // Removed setNeedsRefresh and pause to keep scanning active
         } else {
           toast.error(result.message);
         }
@@ -170,6 +167,15 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
   useEffect(() => {
     const videoElem = videoRef.current;
     if (!videoElem) return;
+
+    const requestCameraPermission = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        toast.error('Gagal mengakses kamera. Pastikan kamera diizinkan dan tidak sedang digunakan aplikasi lain.');
+      }
+    };
 
     const startScanner = async () => {
       try {
@@ -198,6 +204,7 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
       }
     };
 
+    requestCameraPermission();
     startScanner();
 
     return () => {
@@ -218,7 +225,7 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
   return (
     <div className="space-y-4">
       <div className="w-full max-w-sm mx-auto relative">
-        <video 
+        <video
           ref={videoRef}
           className="w-full aspect-square object-cover"
         />
