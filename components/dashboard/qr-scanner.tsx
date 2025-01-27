@@ -87,22 +87,10 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
 
       const pesertaData = await response.json();
       
-      // If we're in preview mode (no type/busId), show drawer and return success
-      if (!type || !busId) {
-        setPeserta(pesertaData);
-        setDrawerOpen(true);
-        onScanComplete?.({
-          peserta: pesertaData,
-          success: true,
-          message: 'QR Code berhasil dipindai'
-        });
-        toast.success("Data peserta berhasil ditemukan");
-        return;
-      }
-
-      // Handle status update or attendance update
+      // Handle status update, attendance update, or preview mode
       try {
         let response;
+        
         if (statusName) {
           // Update specific status
           response = await fetch('/api/status/update', {
@@ -128,6 +116,17 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
               busId
             }),
           });
+        } else {
+          // Preview mode - just show the drawer
+          setPeserta(pesertaData);
+          setDrawerOpen(true);
+          onScanComplete?.({
+            peserta: pesertaData,
+            success: true,
+            message: 'QR Code berhasil dipindai'
+          });
+          toast.success("Data peserta berhasil ditemukan");
+          return;
         }
 
         if (!response || !response.ok) {
