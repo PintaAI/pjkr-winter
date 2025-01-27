@@ -143,7 +143,10 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
 
         if (result.success) {
           toast.success(result.message);
-          // Removed setNeedsRefresh and pause to keep scanning active
+          // Ensure scanner remains active
+          if (qrScannerRef.current) {
+            qrScannerRef.current.start();
+          }
         } else {
           toast.error(result.message);
         }
