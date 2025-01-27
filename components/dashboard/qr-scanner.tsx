@@ -200,6 +200,20 @@ export function QRScanner({
     };
   }, [onScanComplete]);
 
+  // Control scanner when drawer opens/closes
+  useEffect(() => {
+    handleScannerControl(drawerOpen);
+  }, [drawerOpen]);
+
+  // Auto-close drawer after status update
+  useEffect(() => {
+    if (statusMessage && drawerOpen) {
+      const timer = setTimeout(() => {
+        setDrawerOpen(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage, drawerOpen]);
 
   return (
     <div className="space-y-4">
@@ -236,7 +250,6 @@ export function QRScanner({
           setDrawerOpen(open);
           if (!open) {
             setPeserta(null);
-            setStatusMessage("");
             // Start scanner when drawer is closed
             if (qrScannerRef.current) {
               qrScannerRef.current.start();
