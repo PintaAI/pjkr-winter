@@ -23,17 +23,23 @@ type PesertaWithRelations = User & {
 };
 
 interface QRScannerProps {
-  type?: 'departure' | 'return';
+  type?: "departure" | "return";
   busId?: string;
   statusName?: string;
   onScanComplete?: (result: {
     peserta: PesertaWithRelations;
     success: boolean;
     message: string;
+    code?: string; // misal server balikin kode error/sukses tertentu
   }) => void;
 }
 
-export function QRScanner({ type, busId, statusName, onScanComplete }: QRScannerProps) {
+export function QRScanner({
+  type,
+  busId,
+  statusName,
+  onScanComplete,
+}: QRScannerProps) {
   const router = useRouter();
   const [peserta, setPeserta] = useState<PesertaWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,12 +47,12 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
   const [drawerOpen, setDrawerOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
-  const lastScannedRef = useRef<{ code: string; timestamp: number } | null>(null);
+  const lastScannedRef = useRef<{ code: string; timestamp: number } | null>(
+    null
+  );
 
-  // Fungsi untuk mengontrol scanner
   const handleScannerControl = (isDrawerOpen: boolean) => {
     if (!qrScannerRef.current) return;
-    
     if (isDrawerOpen) {
       qrScannerRef.current.pause();
     } else {
@@ -54,24 +60,18 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
     }
   };
 
-  // Fungsi untuk memproses QR code dengan debounce
   const processQRCode = async (qrText: string) => {
-    // Cek apakah code yang sama telah di-scan dalam 5 detik terakhir
+    // Debounce scan biar gak nge-scan berulang2 dalam 5 detik
     const now = Date.now();
     if (
       lastScannedRef.current?.code === qrText &&
       now - lastScannedRef.current.timestamp < 5000
     ) {
-      return; // Abaikan scan yang terlalu cepat
+      return;
     }
+    lastScannedRef.current = { code: qrText, timestamp: now };
 
-    // Update referensi scan terakhir
-    lastScannedRef.current = {
-      code: qrText,
-      timestamp: now,
-    };
-
-    // Validate QR code format
+    // Cek format QR code
     if (!qrText.match(/^[a-zA-Z0-9_-]+$/)) {
       console.warn("Format QR code tidak valid");
       return;
@@ -80,94 +80,92 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
     try {
       setIsLoading(true);
       const response = await fetch(`/api/peserta/${qrText}`);
-      
+
       if (!response.ok) {
         throw new Error("Gagal mengambil data peserta");
       }
 
       const pesertaData = await response.json();
-      
-      // Handle status update, attendance update, or preview mode
-      try {
-        let response;
-        
+
+      // Kalau ada param (statusName, type, busId) -> Update data,
+      // kalau nggak -> preview aja
+      if (statusName || (type && busId)) {
+        let updateResponse: Response | null = null;
+
         if (statusName) {
-          // Update specific status
-          response = await fetch('/api/status/update', {
-            method: 'POST',
+          // Update status
+          updateResponse = await fetch("/api/status/update", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               pesertaId: pesertaData.id,
-              statusName
+              statusName,
             }),
           });
         } else if (type && busId) {
           // Update attendance
-          response = await fetch('/api/attendance/update', {
-            method: 'POST',
+          updateResponse = await fetch("/api/attendance/update", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               pesertaId: pesertaData.id,
               type,
-              busId
+              busId,
             }),
           });
-        } else {
-          // Preview mode - just show the drawer
-          setPeserta(pesertaData);
-          setDrawerOpen(true);
-          onScanComplete?.({
-            peserta: pesertaData,
-            success: true,
-            message: 'QR Code berhasil dipindai'
-          });
-          toast.success("Data peserta berhasil ditemukan");
-          return;
         }
 
-        if (!response || !response.ok) {
-          throw new Error(statusName ? "Gagal memperbarui status" : "Gagal memperbarui status kehadiran");
+        if (!updateResponse || !updateResponse.ok) {
+          throw new Error("Gagal memperbarui data peserta");
         }
 
-        const result = await response.json();
-
-        if (result.statusAlreadyTrue) {
-          toast.info("Status sudah benar");
-          onScanComplete?.({
-            peserta: pesertaData,
-            success: true,
-            message: 'Status sudah benar'
-          });
-          return;
-        }
-        
+        const result = await updateResponse.json();
         onScanComplete?.({
           peserta: pesertaData,
           success: result.success,
-          message: result.message
+          message: result.message,
+          code: result.code, // misal: "ALREADY_TRUE" dsb
         });
 
-        if (result.success) {
+        if (result.code === "ALREADY_TRUE") {
+          // Kalau status ternyata sudah di-set sebelumnya
+          toast.error("Status sudah aktif sebelumnya!");
+        } else if (result.success) {
           toast.success(result.message);
-          // Ensure scanner remains active
-          if (qrScannerRef.current) {
-            qrScannerRef.current.start();
-          }
         } else {
           toast.error(result.message);
         }
-      } catch (error) {
-        console.error("Error updating attendance:", error);
+
+        // Setelah update, kita pause dulu scannernya
+        if (qrScannerRef.current) {
+          qrScannerRef.current.pause();
+        }
+
+        // Di sini mau auto-reset setelah 2 detik
+        setTimeout(() => {
+          // Reset apapun yang perlu di-reset
+          setPeserta(null);
+          setIsLoading(false);
+          setNeedsRefresh(false);
+          // Mulai lagi scannernya
+          if (qrScannerRef.current) {
+            qrScannerRef.current.start();
+          }
+        }, 2000);
+      } else {
+        // Mode preview (tanpa update)
+        setPeserta(pesertaData);
+        setDrawerOpen(true);
         onScanComplete?.({
           peserta: pesertaData,
-          success: false,
-          message: 'Gagal memproses absensi'
+          success: true,
+          message: "QR Code berhasil dipindai",
         });
-        toast.error("Gagal memproses absensi");
+        toast.success("Data peserta berhasil ditemukan");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -181,21 +179,11 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
     const videoElem = videoRef.current;
     if (!videoElem) return;
 
-    const requestCameraPermission = async () => {
-      try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-        toast.error('Gagal mengakses kamera. Pastikan kamera diizinkan dan tidak sedang digunakan aplikasi lain.');
-      }
-    };
-
     const startScanner = async () => {
       try {
-        // Create QR Scanner instance
-        // Set worker path before creating scanner instance
-        QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
-        
+        // worker path
+        QrScanner.WORKER_PATH = "/qr-scanner-worker.min.js";
+
         qrScannerRef.current = new QrScanner(
           videoElem,
           async (result: QrScanner.ScanResult) => {
@@ -205,19 +193,19 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
             highlightScanRegion: true,
             highlightCodeOutline: true,
             maxScansPerSecond: 5,
-            // Let browser choose best available camera
-            returnDetailedScanResult: true
+            returnDetailedScanResult: true,
           }
         );
 
         await qrScannerRef.current.start();
       } catch (error) {
-        console.error('Error starting QR scanner:', error);
-        toast.error('Gagal mengakses kamera. Pastikan kamera diizinkan dan tidak sedang digunakan aplikasi lain.');
+        console.error("Error starting QR scanner:", error);
+        toast.error(
+          "Gagal mengakses kamera. Pastikan kamera diizinkan dan tidak sedang digunakan aplikasi lain."
+        );
       }
     };
 
-    requestCameraPermission();
     startScanner();
 
     return () => {
@@ -227,21 +215,17 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
     };
   }, [onScanComplete]);
 
-  // Effect untuk mengontrol scanner berdasarkan status drawer
+  // Kontrol scanner kalau drawer dibuka/tutup pada mode preview
   useEffect(() => {
-    // Only control scanner with drawer in preview mode
-    if (!type && !busId) {
+    if (!type && !busId && !statusName) {
       handleScannerControl(drawerOpen);
     }
-  }, [drawerOpen, type, busId]);
+  }, [drawerOpen, type, busId, statusName]);
 
   return (
     <div className="space-y-4">
       <div className="w-full max-w-sm mx-auto relative">
-        <video
-          ref={videoRef}
-          className="w-full aspect-square object-cover"
-        />
+        <video ref={videoRef} className="w-full aspect-square object-cover" />
         {needsRefresh && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <Button
@@ -249,9 +233,7 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
               size="lg"
               className="gap-2"
               onClick={() => {
-                // Refresh the entire page
                 router.refresh();
-                // Force a hard reload if needed
                 window.location.reload();
               }}
             >
@@ -269,8 +251,8 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
         </div>
       )}
 
-      <Drawer 
-        open={drawerOpen} 
+      <Drawer
+        open={drawerOpen}
         onOpenChange={(open) => {
           setDrawerOpen(open);
           if (!open) {
