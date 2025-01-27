@@ -45,6 +45,7 @@ export function QRScanner({
   const [isLoading, setIsLoading] = useState(false);
   const [needsRefresh, setNeedsRefresh] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string>("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
   const lastScannedRef = useRef<{ code: string; timestamp: number } | null>(
@@ -135,6 +136,7 @@ export function QRScanner({
           // Open the drawer and show success message
           setPeserta(pesertaData);
           setDrawerOpen(true);
+          setStatusMessage(result.message);
           toast.success(result.message);
         } else {
           toast.error(result.message);
@@ -198,12 +200,6 @@ export function QRScanner({
     };
   }, [onScanComplete]);
 
-  // Kontrol scanner kalau drawer dibuka/tutup pada mode preview
-  useEffect(() => {
-    if (!type && !busId && !statusName) {
-      handleScannerControl(drawerOpen);
-    }
-  }, [drawerOpen, type, busId, statusName]);
 
   return (
     <div className="space-y-4">
@@ -240,15 +236,33 @@ export function QRScanner({
           setDrawerOpen(open);
           if (!open) {
             setPeserta(null);
+            setStatusMessage("");
+            // Start scanner when drawer is closed
+            if (qrScannerRef.current) {
+              qrScannerRef.current.start();
+            }
+          } else {
+            // Pause scanner when drawer is opened
+            if (qrScannerRef.current) {
+              qrScannerRef.current.pause();
+            }
           }
         }}
       >
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Data Peserta</DrawerTitle>
+            <DrawerTitle>
+              {statusName || (type && busId) ? "Status Update" : "Data Peserta"}
+            </DrawerTitle>
           </DrawerHeader>
           <div className="p-4">
-            {peserta && <PesertaCard peserta={peserta} />}
+            {statusName || (type && busId) ? (
+              <div className="flex items-center justify-center p-6">
+                <span className="text-lg">{statusMessage}</span>
+              </div>
+            ) : (
+              peserta && <PesertaCard peserta={peserta} />
+            )}
           </div>
         </DrawerContent>
       </Drawer>
