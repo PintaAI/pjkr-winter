@@ -134,6 +134,16 @@ export function QRScanner({ type, busId, statusName, onScanComplete }: QRScanner
         }
 
         const result = await response.json();
+
+        if (result.statusAlreadyTrue) {
+          toast.info("Status sudah benar");
+          onScanComplete?.({
+            peserta: pesertaData,
+            success: true,
+            message: 'Status sudah benar'
+          });
+          return;
+        }
         
         onScanComplete?.({
           peserta: pesertaData,
