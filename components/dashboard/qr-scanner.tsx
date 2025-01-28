@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import QrScanner from "qr-scanner";
 import { toast } from "sonner";
 import { PesertaCard } from "./peserta-card";
-import { User, Bus, Ticket, StatusPeserta, OptionalItem } from "@prisma/client";
+import { User, Bus, Ticket, StatusPeserta, OptionalItem, Registration } from "@prisma/client";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -15,11 +15,16 @@ import {
   DrawerTitle,
 } from "../ui/drawer";
 
+type RegistrationWithPeserta = Registration & {
+  peserta: User[];
+};
+
 type PesertaWithRelations = User & {
   bus: Bus | null;
   tiket: Ticket[];
   optionalItems: OptionalItem[];
   status: StatusPeserta[];
+  registration: RegistrationWithPeserta | null;
 };
 
 interface QRScannerProps {

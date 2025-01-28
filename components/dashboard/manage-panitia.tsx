@@ -18,7 +18,7 @@ import { getPanitiaData, deletePeserta } from "@/app/actions/dashboard"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PesertaCard } from "@/components/dashboard/peserta-card"
-import { User, UserRole, UserPlan, Bus, Ticket, OptionalItem, StatusPeserta } from "@prisma/client"
+import { User, UserRole, UserPlan, Bus, Ticket, OptionalItem, StatusPeserta, Registration } from "@prisma/client"
 
 // Type for data returned from getPanitiaData()
 type PanitiaData = {
@@ -46,11 +46,16 @@ type PanitiaData = {
 }
 
 // Type for our complete panitia data
+type RegistrationWithPeserta = Registration & {
+  peserta: User[];
+};
+
 type PanitiaWithRelations = User & {
   bus: Bus | null
   tiket: Ticket[]
   optionalItems: OptionalItem[]
   status: StatusPeserta[]
+  registration: RegistrationWithPeserta | null
 }
 
 type State = {
@@ -123,6 +128,7 @@ export function ManagePanitia() {
           // Add required relations
           bus: null,
           status: [],
+          registration: null,
           // Use existing relations
           tiket: p.tiket,
           optionalItems: p.optionalItems,
