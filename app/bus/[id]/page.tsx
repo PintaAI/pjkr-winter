@@ -193,20 +193,28 @@ export default function BusDetailPage() {
                           setIsDrawerOpen(true)
                         }}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className={`${peserta.role === UserRole.CREW ? "text-blue-600 font-semibold" : ""}`}>
-                            {peserta.name || "Tanpa Nama"}
-                          </span>
-                          {peserta.role === UserRole.CREW && (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-600 hover:bg-blue-200">
-                              CREW
-                            </Badge>
-                          )}
-                          {peserta.role === UserRole.PANITIA && (
-                            <Badge variant="secondary">
-                              PANITIA
-                            </Badge>
-                          )}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`${peserta.role === UserRole.CREW ? "text-blue-600 font-semibold" : ""}`}>
+                              {peserta.name || "Tanpa Nama"}
+                            </span>
+                            {peserta.role === UserRole.CREW && (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-600 hover:bg-blue-200">
+                                CREW
+                              </Badge>
+                            )}
+                            {peserta.role === UserRole.PANITIA && (
+                              <Badge variant="secondary">
+                                PANITIA
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground space-x-2">
+                            
+                            <span> Baju: {peserta.ukuranBaju || "-"}</span>
+                            <span>• Sepatu: {peserta.ukuranSepatu || "-"}</span>
+                            <span>• {peserta.tipeAlat || "-"}</span>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
