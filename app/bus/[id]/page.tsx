@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useParams, useRouter } from "next/navigation"
-import { getBusDetail } from "@/app/actions/dashboard"
+import { getBusDetail, updateStatusPeserta } from "@/app/actions/dashboard"
+import { toast } from "sonner"
 import { User as PrismaUser, Bus as PrismaBus, Ticket, OptionalItem as PrismaOptionalItem, StatusPeserta as PrismaStatusPeserta, UserRole, UserPlan, Registration } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -55,6 +56,7 @@ export default function BusDetailPage() {
     }
   }
   const [selectedPeserta, setSelectedPeserta] = useState<PesertaWithRelations | null>(null)
+  const [updatingStatus, setUpdatingStatus] = useState<{pesertaId: string, statusName: string} | null>(null)
 
   useEffect(() => {
     if (params.id) {
@@ -165,8 +167,8 @@ export default function BusDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">Nama</TableHead>
-                  <TableHead className="min-w-[100px]">Status</TableHead>
+                  <TableHead className="min-w-[100px]">Nama</TableHead>
+                  <TableHead className="min-w-[300px]">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,41 +193,84 @@ export default function BusDetailPage() {
                           setIsDrawerOpen(true)
                         }}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className={`${peserta.role === UserRole.CREW ? "text-blue-600 font-semibold" : ""}`}>
-                            {peserta.name || "Tanpa Nama"}
-                          </span>
-                          {peserta.role === UserRole.CREW && (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-600 hover:bg-blue-200">
-                              CREW
-                            </Badge>
-                          )}
-                          {peserta.role === UserRole.PANITIA && (
-                            <Badge variant="secondary">
-                              PANITIA
-                            </Badge>
-                          )}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`${peserta.role === UserRole.CREW ? "text-blue-600 font-semibold" : ""}`}>
+                              {peserta.name || "Tanpa Nama"}
+                            </span>
+                            {peserta.role === UserRole.CREW && (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-600 hover:bg-blue-200">
+                                CREW
+                              </Badge>
+                            )}
+                            {peserta.role === UserRole.PANITIA && (
+                              <Badge variant="secondary">
+                                PANITIA
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex gap-3 text-xs text-muted-foreground">
+                            {peserta.ukuranBaju && (
+                              <span>Baju: {peserta.ukuranBaju}</span>
+                            )}
+                            {peserta.ukuranSepatu && (
+                              <span>Sepatu: {peserta.ukuranSepatu}</span>
+                            )}
+                            {peserta.tipeAlat && (
+                              <span>Alat: {peserta.tipeAlat}</span>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 flex-wrap">
-                          {peserta.status.map((status) => (
-                            status.nilai && (
+                          {peserta.status.map((status) => {
+                            const isUpdating = updatingStatus?.pesertaId === peserta.id && updatingStatus?.statusName === status.nama;
+                            const isKeberangkatan = status.nama === "Keberangkatan";
+                            const isKepulangan = status.nama === "Kepulangan";
+                            
+                            return (
                               <Badge 
                                 key={status.nama}
                                 variant="outline" 
-                                className={`${
-                                  status.nama === "Keberangkatan" 
-                                    ? "bg-green-50 text-green-700 hover:bg-green-100"
-                                    : status.nama === "Kepulangan"
-                                    ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                className={`cursor-pointer transition-all ${
+                                  isUpdating ? "opacity-50" :
+                                  status.nilai ? (
+                                    isKeberangkatan 
+                                      ? "bg-green-50 text-green-700 hover:bg-green-100"
+                                      : isKepulangan
+                                      ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                      : "bg-green-50 text-green-700 hover:bg-green-100"
+                                  ) : (
+                                    "bg-red-50 text-red-700 hover:bg-red-100"
+                                  )
                                 }`}
+                                onClick={async () => {
+                                  try {
+                                    setUpdatingStatus({ pesertaId: peserta.id, statusName: status.nama });
+                                    const result = await updateStatusPeserta(
+                                      peserta.id,
+                                      status.nama,
+                                      !status.nilai
+                                    );
+                                    
+                                    if (result.success) {
+                                      toast.success(`Status ${status.nama} berhasil diperbarui`);
+                                      fetchBusDetail();
+                                    } else {
+                                      toast.error(result.error || "Gagal memperbarui status");
+                                    }
+                                  } catch (error) {
+                                    toast.error("Terjadi kesalahan saat memperbarui status");
+                                  } finally {
+                                    setUpdatingStatus(null);
+                                  }
+                                }}
                               >
                                 {status.nama}
                               </Badge>
-                            )
-                          ))}
+                            );
+                          })}
                         </div>
                       </TableCell>
                     </TableRow>
