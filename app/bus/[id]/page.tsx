@@ -214,6 +214,7 @@ export default function BusDetailPage() {
                             <span> Baju: {peserta.ukuranBaju || "-"}</span>
                             <span>• Sepatu: {peserta.ukuranSepatu || "-"}</span>
                             <span>• {peserta.tipeAlat || "-"}</span>
+                            <span>- {peserta.telepon || "-"}</span>
                           </div>
                         </div>
                       </TableCell>
@@ -248,7 +249,8 @@ export default function BusDetailPage() {
                                     const result = await updateStatusPeserta(
                                       peserta.id,
                                       status.nama,
-                                      !status.nilai
+                                      !status.nilai,
+                                      undefined // optional keterangan parameter
                                     );
                                     
                                     if (result.success) {
@@ -258,6 +260,7 @@ export default function BusDetailPage() {
                                       toast.error(result.error || "Gagal memperbarui status");
                                     }
                                   } catch (error) {
+                                    console.error("[UPDATE_STATUS_ERROR]", error);
                                     toast.error("Terjadi kesalahan saat memperbarui status");
                                   } finally {
                                     setUpdatingStatus(null);
