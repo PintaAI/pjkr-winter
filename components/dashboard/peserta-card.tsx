@@ -4,18 +4,23 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Bus, Ticket, OptionalItem, StatusPeserta, UserRole } from "@prisma/client";
+import { User, Bus, Ticket, OptionalItem, StatusPeserta, UserRole, Registration } from "@prisma/client";
 import { updateStatusPeserta, updatePeserta, getBusData, getOptionalItemData } from "@/app/actions/dashboard";
 import { toast } from "sonner";
 import { Check, X, QrCode } from "lucide-react";
 import { EditPesertaDialog } from "./dialogs/edit-peserta-dialog";
 import { ManageOptionalItemsDialog } from "./dialogs/manage-optional-items-dialog";
 
+type RegistrationWithPeserta = Registration & {
+  peserta: User[];
+};
+
 type PesertaWithRelations = User & {
   bus: Bus | null;
   tiket: Ticket[];
   optionalItems: OptionalItem[];
   status: StatusPeserta[];
+  registration: RegistrationWithPeserta | null;
 };
 
 interface PesertaCardProps {
@@ -265,6 +270,21 @@ export function PesertaCard({ peserta: initialPeserta }: PesertaCardProps) {
             ))}
           </div>
         </div>
+
+        {peserta.registration?.peserta && peserta.registration.peserta.length > 1 && (
+          <div>
+            <h4 className="font-semibold text-base text-primary mb-2">Group Members</h4>
+            <div className="flex gap-2 flex-wrap">
+              {peserta.registration.peserta
+                .filter((p: User) => p.id !== peserta.id) // Don't show the current peserta
+                .map((p: User) => (
+                  <Badge key={p.id} variant="outline">
+                    {p.name || "Unnamed"}
+                  </Badge>
+                ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

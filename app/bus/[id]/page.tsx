@@ -5,18 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useParams, useRouter } from "next/navigation"
 import { getBusDetail } from "@/app/actions/dashboard"
-import { User as PrismaUser, Bus as PrismaBus, Ticket, OptionalItem as PrismaOptionalItem, StatusPeserta as PrismaStatusPeserta, UserRole, UserPlan } from "@prisma/client"
+import { User as PrismaUser, Bus as PrismaBus, Ticket, OptionalItem as PrismaOptionalItem, StatusPeserta as PrismaStatusPeserta, UserRole, UserPlan, Registration } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { PesertaCard } from "@/components/dashboard/peserta-card"
-import { Separator } from "@/components/ui/separator"
+
+
+type RegistrationWithPeserta = Registration & {
+  peserta: PrismaUser[];
+};
 
 type PesertaWithRelations = PrismaUser & {
   bus: PrismaBus | null;
   tiket: Ticket[];
   optionalItems: PrismaOptionalItem[];
   status: PrismaStatusPeserta[];
+  registration: RegistrationWithPeserta | null;
 };
 
 interface Bus {
@@ -24,6 +29,7 @@ interface Bus {
   namaBus: string;
   kapasitas: number;
   peserta: PesertaWithRelations[];
+  
 }
 
 export default function BusDetailPage() {
@@ -164,7 +170,15 @@ export default function BusDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bus.peserta.map((peserta) => {
+                {[...bus.peserta]
+                  .sort((a, b) => {
+                    // First sort by role (CREW at bottom)
+                    if (a.role === UserRole.CREW && b.role !== UserRole.CREW) return 1;
+                    if (a.role !== UserRole.CREW && b.role === UserRole.CREW) return -1;
+                    // Then sort by name
+                    return (a.name || "").localeCompare(b.name || "");
+                  })
+                  .map((peserta) => {
                   const isPresent = peserta.status.find(s => s.nama === "Keberangkatan")?.nilai
                   const hasReturned = peserta.status.find(s => s.nama === "Kepulangan")?.nilai
                   

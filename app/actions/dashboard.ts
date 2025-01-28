@@ -600,7 +600,11 @@ export async function getBusDetail(id: string) {
             optionalItems: true,
             status: true,
             bus: true,
-            registration: true
+            registration: {
+              include: {
+                peserta: true
+              }
+            }
           }
         },
       },
