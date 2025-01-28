@@ -193,38 +193,27 @@ export default function BusDetailPage() {
                           setIsDrawerOpen(true)
                         }}
                       >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className={`${peserta.role === UserRole.CREW ? "text-blue-600 font-semibold" : ""}`}>
-                              {peserta.name || "Tanpa Nama"}
-                            </span>
-                            {peserta.role === UserRole.CREW && (
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-600 hover:bg-blue-200">
-                                CREW
-                              </Badge>
-                            )}
-                            {peserta.role === UserRole.PANITIA && (
-                              <Badge variant="secondary">
-                                PANITIA
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex gap-3 text-xs text-muted-foreground">
-                            {peserta.ukuranBaju && (
-                              <span>Baju: {peserta.ukuranBaju}</span>
-                            )}
-                            {peserta.ukuranSepatu && (
-                              <span>Sepatu: {peserta.ukuranSepatu}</span>
-                            )}
-                            {peserta.tipeAlat && (
-                              <span>Alat: {peserta.tipeAlat}</span>
-                            )}
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`${peserta.role === UserRole.CREW ? "text-blue-600 font-semibold" : ""}`}>
+                            {peserta.name || "Tanpa Nama"}
+                          </span>
+                          {peserta.role === UserRole.CREW && (
+                            <Badge variant="secondary" className="bg-blue-100 text-blue-600 hover:bg-blue-200">
+                              CREW
+                            </Badge>
+                          )}
+                          {peserta.role === UserRole.PANITIA && (
+                            <Badge variant="secondary">
+                              PANITIA
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 flex-wrap">
-                          {peserta.status.map((status) => {
+                          {[...peserta.status]
+                            .sort((a, b) => a.nama.localeCompare(b.nama))
+                            .map((status) => {
                             const isUpdating = updatingStatus?.pesertaId === peserta.id && updatingStatus?.statusName === status.nama;
                             const isKeberangkatan = status.nama === "Keberangkatan";
                             const isKepulangan = status.nama === "Kepulangan";
@@ -242,7 +231,7 @@ export default function BusDetailPage() {
                                       ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
                                       : "bg-green-50 text-green-700 hover:bg-green-100"
                                   ) : (
-                                    "bg-red-50 text-red-700 hover:bg-red-100"
+                                    "bg-transparent hover:bg-muted/50"
                                   )
                                 }`}
                                 onClick={async () => {
