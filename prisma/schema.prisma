@@ -150,3 +150,15 @@ model StatusPeserta {
   peserta     User      @relation(fields: [pesertaId], references: [id])
   pesertaId   String
 }
+
+// Model Survey untuk feedback peserta
+model Survey {
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now())
+  howDidYouKnow     String    // How they learned about the event
+  eventRating       Int       // 1-5 rating
+  foodRating        Int       // 1-5 rating
+  serviceRating     Int       // 1-5 rating
+  merchandiseRating Int       // 1-5 rating
+  feedback          String?   // Kritik dan saran
+}

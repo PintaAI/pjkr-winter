@@ -7,7 +7,8 @@ export const publicRoutes = [
   "/community",
   "/artikel",
   "/artikel/[id]",
-  "/event-registration"
+  "/event-registration",
+  "/survey"
 ];
 
 /**

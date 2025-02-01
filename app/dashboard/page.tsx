@@ -7,9 +7,10 @@ import { ManageStatus } from "@/components/dashboard/manage-status"
 import { ManagePeserta } from "@/components/dashboard/manage-peserta"
 import { ManageOptionalItems } from "@/components/dashboard/manage-optional-items"
 import { ManageRegistrationLogs } from "@/components/dashboard/manage-registration-logs"
+import { ManageSurvey } from "@/components/dashboard/manage-survey"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Users, Package, Bus, CheckSquare, ClipboardList, RefreshCw } from "lucide-react"
+import { Users, Package, Bus, CheckSquare, ClipboardList, RefreshCw, BarChart } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
@@ -69,8 +70,7 @@ export default function DashboardPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} defaultValue="peserta" className="space-y-6">
-        {/* Keeping original tab structure */}
-        <TabsList className="grid grid-cols-5 gap-4">
+        <TabsList className="grid grid-cols-6 gap-4">
           <TabsTrigger value="peserta" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden md:inline">Daftar Peserta</span>
@@ -90,6 +90,10 @@ export default function DashboardPage() {
           <TabsTrigger value="logs" className="flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
             <span className="hidden md:inline">Log Registrasi</span>
+          </TabsTrigger>
+          <TabsTrigger value="survey" className="flex items-center gap-2">
+            <BarChart className="h-4 w-4" />
+            <span className="hidden md:inline">Hasil Survey</span>
           </TabsTrigger>
         </TabsList>
 
@@ -120,6 +124,10 @@ export default function DashboardPage() {
 
         <TabsContent value="logs">
           <ManageRegistrationLogs />
+        </TabsContent>
+
+        <TabsContent value="survey">
+          <ManageSurvey />
         </TabsContent>
       </Tabs>
     </div>
