@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon, Star } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 const RATINGS = [1, 2, 3, 4, 5] as const;
 const RATING_LABELS = {
@@ -52,6 +52,9 @@ export function SurveyForm() {
       if (!formData.eventRating || !formData.foodRating || !formData.serviceRating || !formData.merchandiseRating) {
         throw new Error("Mohon berikan penilaian untuk semua aspek acara");
       }
+      if (!formData.feedback.trim()) {
+        throw new Error("Mohon berikan kritik dan saran Anda");
+      }
 
       const response = await fetch("/api/survey/submit", {
         method: "POST",
@@ -65,14 +68,14 @@ export function SurveyForm() {
         throw new Error(data.error || "Gagal mengirim survey");
       }
 
-      alert("Terima kasih atas feedback Anda! Anda akan dialihkan ke halaman dokumentasi.");
+      toast.success("Terima kasih atas feedback Anda! Anda akan dialihkan ke halaman dokumentasi.");
 
       setTimeout(() => {
         window.location.href = "https://drive.google.com/drive/folders/1Px51HZIjnvWTRkdY9txfh694tbyMRFRQ?usp=sharing";
       }, 1500);
     } catch (error) {
       console.error("Error submitting survey:", error);
-      alert(error instanceof Error ? error.message : "Terjadi kesalahan. Silakan coba lagi.");
+      toast.error(error instanceof Error ? error.message : "Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,7 +92,8 @@ export function SurveyForm() {
     (Object.values(formData).filter((val) => (typeof val === "number" ? val > 0 : val !== "")).length / 6) * 100;
 
   return (
-    <div className="min-h-screen  flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <Toaster richColors position="top-center" />
       <Card className="w-full max-w-2xl overflow-hidden shadow-xl">
         <div className="bg-primary p-6 text-primary-foreground">
           <h1 className="text-2xl font-bold">Survei Kepuasan Acara</h1>
