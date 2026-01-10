@@ -282,7 +282,7 @@ export default function EventRegistrationForm() {
               <AlertDescription className="text-center">
                 Silakan bergabung dengan grup WhatsApp kami untuk informasi lebih lanjut:{" "}
                 <a 
-                  href="https://chat.whatsapp.com/C5S7eCPqjwJFfXLj2t4uie"
+                  href="https://chat.whatsapp.com/HsyNltB8rizA9BsgednY1N"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline font-medium"
