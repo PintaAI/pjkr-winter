@@ -54,7 +54,7 @@ export async function getTicketData() {
       where: {
         peserta: {
           role: "PANITIA",
-          email: "aldiyoesuf@gmail.com"
+          email: "admin@admin.com"
         }
       }
     })
@@ -91,7 +91,7 @@ export async function getOptionalItemData() {
       where: {
         peserta: {
           role: "PANITIA",
-          email: "aldiyoesuf@gmail.com"
+          email: "admin@admin.com"
         }
       }
     })

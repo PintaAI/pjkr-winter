@@ -120,13 +120,34 @@ export default function EventRegistrationForm() {
   useEffect(() => {
     const loadData = async () => {
       const busResult = await getBusData()
-      if (busResult.success) setBusData(busResult.data ?? [])
+      if (busResult.success) {
+        const buses = busResult.data ?? []
+        setBusData(buses)
+        // Auto-select if only one bus
+        if (buses.length === 1) {
+          setFormData(prev => ({...prev, busId: buses[0].id}))
+        }
+      }
 
       const ticketResult = await getTicketData()
-      if (ticketResult.success) setTicketData(ticketResult.data ?? [])
+      if (ticketResult.success) {
+        const tickets = ticketResult.data ?? []
+        setTicketData(tickets)
+        // Auto-select if only one ticket
+        if (tickets.length === 1) {
+          setFormData(prev => ({...prev, ticketType: tickets[0].tipe}))
+        }
+      }
 
       const optionalItemResult = await getOptionalItemData()
-      if (optionalItemResult.success) setOptionalItemData(optionalItemResult.data ?? [])
+      if (optionalItemResult.success) {
+        const items = optionalItemResult.data ?? []
+        setOptionalItemData(items)
+        // Auto-select if only one optional item
+        if (items.length === 1) {
+          setFormData(prev => ({...prev, optionalItems: [items[0].id]}))
+        }
+      }
     }
     loadData()
   }, [])

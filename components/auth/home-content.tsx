@@ -10,7 +10,7 @@ export const HeroContent = () => {
             PJKR
           </h1>
           <h2 className=" text-2xl md:text-4xl font-bold animate-fade-down text-foreground/90">
-            WINTER SPORTS 2025
+            WINTER SPORTS 2026
           </h2>
           <p className="text-sm animate-fade-down text-foreground/80">
             by Pejuangkorea

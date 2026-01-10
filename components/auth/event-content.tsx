@@ -17,7 +17,7 @@ export const EventContent = () => {
           
           <div className="space-y-2">
             <h1 className="text-4xl font-bold">Rabu,</h1>
-            <h2 className="text-3xl font-bold">29 Januari 2025</h2>
+            <h2 className="text-3xl font-bold">16 Februari 2025</h2>
             <p className="text-sm text-muted-foreground">설날 · Seollal · Tahun Baru Lunar</p>
           </div>
         </div>
@@ -26,7 +26,7 @@ export const EventContent = () => {
         <div className="bg-secondary rounded-lg p-4 mr-8 -ml-4">
         <div className="flex items-center ml-12 space-x-2">
   <span className="text-sm scale-90 text-secondary-foreground">jam kumpul</span>
-  <div className="text-6xl  font-bold tracking-wider text-secondary-foreground drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]">07:00</div>
+  <div className="text-6xl  font-bold tracking-wider text-secondary-foreground drop-shadow-[0_4px_4px_rgba(0,0,0,0.75)]">07:30</div>
   <span className="text-sm text-secondary-foreground">WKS</span>
 </div>
 
