@@ -10,10 +10,7 @@ export function CTAContent() {
           <h2 className="text-accent text-xl font-bold text-center">Siap untuk pengalaman baru berkesan bareng Pejuangkorea?</h2>
         </div>
         
-        {/* Price */}
-        <div className="z-10">
-          <p className="text-center">harga mulai dari ₩ 60.000,-</p>
-        </div>
+      
 
         {/* Icons */}
         <div className="flex justify-center space-x-6 my-4 z-10">
