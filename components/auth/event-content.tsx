@@ -16,7 +16,7 @@ export const EventContent = () => {
           <Separator orientation="vertical" className="absolute left-5 -top-6 h-[150%] w-1 bg-secondary" />
           
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold">Rabu,</h1>
+            <h1 className="text-4xl font-bold">Senin,</h1>
             <h2 className="text-3xl font-bold">16 Februari 2026</h2>
             <p className="text-sm text-muted-foreground">설날 · Seollal · Tahun Baru Lunar</p>
           </div>
