@@ -26,8 +26,7 @@ export function TermsAndConditions() {
             <div className="space-y-2">
               <h3 className="text-base sm:text-lg font-semibold">Catatan Penting (NOTE):</h3>
               <ul className="list-disc pl-4 sm:pl-6 space-y-2">
-                <li>Batas waktu pendaftaran adalah H-14 sebelum acara, yaitu pada hari Minggu, 15 Januari 2025.</li>
-                <li>Pembatalan dengan pengembalian dana (refund) dapat dilakukan paling lambat H-14, yaitu pada hari Rabu, 15 Januari 2025.</li>
+                <li>Pembatalan dengan pengembalian dana (refund) dapat dilakukan paling lambat H-14, yaitu pada hari Senin, 2 Februari 2026.</li>
                 <li>Peserta disarankan membawa sarung tangan pribadi, karena panitia tidak menyediakan perlengkapan tersebut.</li>
                 <li>Siapkan uang koin untuk menggunakan fasilitas loker penyimpanan dan charger station di lokasi acara.</li>
                 <li>Disarankan membawa baju ganti untuk kenyamanan setelah aktivitas.</li>
